@@ -49,26 +49,4 @@ def Main() :
         conn.close()
         print("Database connection closed.")
 
-"""
-create logger instance
-
-file :str = name of the file without path
-"""
-def getLogger(file: str) -> logging.Logger:
-
-    date : datetime = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_")
-    filename = os.path.splitext(file)[0]
-    log_path = os.path.join(LOG_PATH, f"{date}_{filename}.log")
-    
-    logger = logging.getLogger(filename)
-    logger.setLevel(logging.INFO)
-    
-    handler = logging.FileHandler(log_path)
-    handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
-    
-    logger.addHandler(handler)
-    return logger
-
-
-
 Main()

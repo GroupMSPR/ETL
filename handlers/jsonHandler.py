@@ -2,7 +2,8 @@ import json
 import os
 
 import pandas
-
+from sqlalchemy import Connection
+from sqlalchemy.orm import Session
 from fileManager import MoveToArchive, MoveToError, WriteLog
 from config import TO_IMPORT_PATH, Exercise, Food
 
@@ -12,7 +13,7 @@ from config import TO_IMPORT_PATH, Exercise, Food
     file: string = file that need to be imported without path
     no return
 """
-def SendJsonToDb(file: str) :
+def SendJsonToDb(file: str, session: Session) :
     
     data = json.load(open(os.path.join(TO_IMPORT_PATH, file)))
     df = pandas.DataFrame(data["data"])
@@ -29,54 +30,60 @@ def SendJsonToDb(file: str) :
         case "nameUser":
             print()
         case "nameExercise":
-            JsonExercise(df, file)
+            JsonExercise(df, file, session)
         case "nameFood":
             print()
         case "name":
-            JsonExercise(df, file)
-    
+            WriteLog(file, "no matches with a table")
 
-def JsonExercise(data: pandas.DataFrame, file: str):
-    exercise: Exercise = Exercise()
+def JsonExercise(data: pandas.DataFrame, file: str, session: Session):
     for index,row in data.iterrows():
         try:
-            succesfull : bool = True
-            if "name" in row:
-                exercise.name = row["name"]
+            exercise: Exercise = Exercise()
+            succesful : bool = True
+            if "nameExercise" in row:
+                exercise.name = row["nameExercise"]
             else :
-                succesfull = False
+                succesful = False
                 WriteLog(file, "file does not contain name_exercice attribute or name_exercice is misspelled.")
                 break
 
             exercise.difficulty_level   = row.get("difficulty_level", "")
             exercise.type               = row.get("type", "")
 
-            if (row.get("target_muscle") is [str]):
-                exercise.target_muscle  = ", ".join(row.get("target_muscle", ""))
+            target_muscle = row.get("target_muscle") 
+            if (isinstance(target_muscle, list)):
+                exercise.target_muscle  = ", ".join(target_muscle)
             elif ("target_muscle" in row) :
                 exercise.target_muscle  = row.get("target_muscle", "")
             else :
-                succesfull = False
+                succesful = False
                 WriteLog(file, "file does not contain name_exercice attribute or name_exercice is misspelled.")
                 break
 
-            if (row.get("secondary_muscle") is [str]):
-                exercise.secondary_muscle  = ", ".join(row.get("secondary_muscle", ""))
+            secondaryMuscle = row.get("secondary_muscle", "no secondary muscle")
+            if (isinstance(secondaryMuscle, list)):
+                exercise.secondary_muscle  = ", ".join(row.get("secondary_muscle", []))
             elif ("secondary_muscle" in row) :
                 exercise.secondary_muscle  = row.get("secondary_muscle", "no secondary muscle")
 
-            if (row.get("equipment") is [str]):
-                exercise.equipment  = ", ".join(row.get("equipment", ""))
-            elif ("equipment" in row) :
-                exercise.equipment  = row.get("equipment", "no secondary muscle")
+            equipment = row.get("equipment", "no equipment")
+            if (isinstance(equipment, list)):
+                exercise.equipment  = ", ".join(row.get("equipment", []))
+            
+            exercise.equipment  = equipment
 
             exercise.difficulty_level   = row.get("difficulty_level", "")
             exercise.instructions       = row.get("instructions", "")
-            
+            session.add(exercise)
+            session.commit()
+
         except Exception as ex:
-            WriteLog(file, ex)
+            succesful = False
+            session.rollback()
+            WriteLog(file, str(ex))
             return ex
-    if (succesfull):
+    if (succesful):
         MoveToArchive(file)
     else :
         MoveToError(file)

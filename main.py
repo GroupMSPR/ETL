@@ -1,36 +1,21 @@
-import datetime
-import json
-import logging
-import mimetypes
 import os
-import shutil
-import magic
-import psycopg2
-from sqlalchemy import NUMERIC, SMALLINT, TEXT, TIMESTAMP, Column, Numeric, SmallInteger, String, Integer, Text, Time
-from sqlalchemy.orm import DeclarativeBase
-import pandas
 
-from config import LOG_PATH, TO_IMPORT_PATH
+from sqlalchemy import Connection, Engine, create_engine
+from sqlalchemy.orm import Session
+from config import TO_IMPORT_PATH, Base
 from fileManager import GetFileType
 from handlers.jsonHandler import SendJsonToDb
 
 def Main() :
     try:
-        conn : psycopg2 = psycopg2.connect(
-            dbname="mspr",
-            user="postgres",
-            password="azerty",
-            host="localhost",
-            port="5434"
-        )
-        cur = conn.cursor()
-
+        engine: Engine = create_engine('postgresql+psycopg2://postgres:azerty@localhost:5434/mspr')
+        Base.metadata.create_all(engine)
+        session: Session = Session(engine)
         print("connection to db succeded")
 
     except Exception as e:
-
         print("connection to db failed")
-        exit
+        exit()
 
     filesNames : list[str] = os.listdir(TO_IMPORT_PATH)
 
@@ -41,12 +26,12 @@ def Main() :
             case "csv":
                 print()
             case "json":
-                SendJsonToDb(file)
+                SendJsonToDb(file, session)
             case _:
                 print("FileType Not supported")
 
-    if conn:
-        conn.close()
+    if session:
+        session.close()
         print("Database connection closed.")
 
 Main()

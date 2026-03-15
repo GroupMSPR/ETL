@@ -46,9 +46,9 @@ class Food(Base) :
 
 class Exercise(Base) :
 
-    __tablename__       = "exercises"
+    __tablename__       = "exersice"
     
-    exercise_id         = Column(Integer, primary_key=True, autoincrement=True)
+    exersice_id         = Column(Integer, primary_key=True, autoincrement=True)
     name                = Column(String(50), nullable=False)
     type                = Column(String(50), nullable=False)
     target_muscle       = Column(Text, nullable=False)

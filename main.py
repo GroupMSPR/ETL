@@ -1,10 +1,13 @@
 import os
 
+import pandas
 from sqlalchemy import Connection, Engine, create_engine
 from sqlalchemy.orm import Session
 from config import TO_IMPORT_PATH, Base
 from fileManager import GetFileType
-from handlers.jsonHandler import SendJsonToDb
+from handlers.dbHandler import sendToTable
+from handlers.jsonHandler import convertJsonToPanda
+
 
 def Main() :
     try:
@@ -20,15 +23,19 @@ def Main() :
     filesNames : list[str] = os.listdir(TO_IMPORT_PATH)
 
     for file in filesNames:
+        data : pandas.DataFrame
         match GetFileType(os.path.join(TO_IMPORT_PATH, file)):
             case "xml":
                 print()
             case "csv":
                 print()
             case "json":
-                SendJsonToDb(file, session)
+                data = convertJsonToPanda(file)
             case _:
                 print("FileType Not supported")
+                continue
+        if data is not None:
+            sendToTable(data, file, session)
 
     if session:
         session.close()

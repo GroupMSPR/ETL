@@ -266,18 +266,19 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
     data = data.fillna(0)
     data["date"] = pandas.to_datetime(data["date"])
 
+    users = session.query(User.user_id, User.email).all()
+
+    user_map = {}
+
+    for user in users:
+        user_map[user.email] = user.user_id
+
     try: 
         for index,row in data.iterrows():
             healthMetric : Health_metric = Health_metric()
 
-            if "date" in row and row["date"] != 0:
-                healthMetric.date_ = row["date"]
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain date attribute or date is misspelled or invalid.")
-                break
-
-            healthMetric.user_id = row.get("user_id") or ""
+            if "user_email" in row and row["user_email"] != 0:
+                healthMetric.user_id = user_map[row.get("user_email")] 
 
             if "date" in row and row["date"] != 0:
                 healthMetric.date = row["date"]

@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import NUMERIC, SMALLINT, TEXT, TIMESTAMP, Column, Numeric, SmallInteger, String, Integer, Text, Time
+from sqlalchemy import NUMERIC, SMALLINT, TEXT, TIMESTAMP, Column, Date, DateTime, ForeignKey, Numeric, SmallInteger, String, Integer, Text, Time
 from sqlalchemy.orm import DeclarativeBase
 
 BASE_PATH      = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +15,11 @@ class User(Base) :
     __tablename__           = "user_"
 
     user_id                 = Column(Integer, primary_key=True, autoincrement=True)
-    age_                    = Column(Integer)
+    first_name              = Column(String(50))
+    last_name               = Column(String(50))
+    email                   = Column(String(100), unique=True)
+    password                = Column(String(50))
+    birthdate               = Column(Date)
     gender                  = Column(String(50))
     weight                  = Column(NUMERIC(15,2))
     height                  = Column(Integer)
@@ -27,6 +31,7 @@ class User(Base) :
     daily_caloric_intake    = Column(Integer)
     goal                    = Column(TEXT)
     subscription            = Column(String(50))
+    subscriptionDate        = Column(Date)
     
 
 class Food(Base) :
@@ -46,7 +51,7 @@ class Food(Base) :
 
 class Exercise(Base) :
 
-    __tablename__       = "exersice"
+    __tablename__       = "exercise"
     
     exersice_id         = Column(Integer, primary_key=True, autoincrement=True)
     name                = Column(String(50), nullable=False)
@@ -58,10 +63,11 @@ class Exercise(Base) :
     instructions        = Column(Text, nullable=False)
 
 class Health_metric(Base) :
-    __tablename__    = "health_metrics"
+    __tablename__ = "health_metric"
 
     health_metric_id = Column(Integer, primary_key=True, autoincrement=True)
-    date_            = Column(TIMESTAMP, nullable=False)
+    user_id          = Column(Integer, ForeignKey("user_.user_id"), nullable=False)
+    date             = Column(DateTime, nullable=False)
     start_weight     = Column(Numeric(15, 2), nullable=False)
     current_weight   = Column(Numeric(15, 2), nullable=False)
     avg_bpm          = Column(Numeric(15, 2), nullable=False)

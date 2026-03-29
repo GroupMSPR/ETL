@@ -6,13 +6,15 @@ from fileManager import MoveToArchive, MoveToError, WriteLog
 
 def sendToTable(data: pandas.DataFrame, file: str, session: Session):
 
-    if "user" in file :
+    fileLowered = file.lower()
+
+    if "user" in fileLowered :
         sendUserToDb(data, file ,session)
-    elif "exercise" in file :
+    elif "exercise" in fileLowered :
         sendExerciseToDb(data, file, session)
-    elif "food" in file :
+    elif "food" in fileLowered :
         sendFoodToDb(data, file, session)
-    elif "health" in file :
+    elif "health" in fileLowered :
         sendHealthMetricToDb(data, file, session)
     else :
         WriteLog(file, "no matches with a table")
@@ -21,8 +23,12 @@ def sendToTable(data: pandas.DataFrame, file: str, session: Session):
 def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
     data = data.fillna(0)
-    data["birthdate"] = pandas.to_datetime(data["birthdate"]).dt.date
-    data["subscription_date"] = pandas.to_datetime(data["subscription_date"]).dt.date
+    if "birthdate" in data:
+        data["birthdate"] = pandas.to_datetime(data["birthdate"]).dt.date
+    
+    if "subscription_date" in data:
+        data["subscription_date"] = pandas.to_datetime(data["subscription_date"]).dt.date
+
     try: 
         for index,row in data.iterrows():
 
@@ -56,14 +62,14 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 WriteLog(file, "file does not contain last_name attribute or last_name is misspelled or invalid.")
                 break 
 
-            if "bithdate" in row and row["bithdate"] != 0:
-                user.birthdate = row["bithdate"]
+            if "birthdate" in row and row["birthdate"] != 0:
+                user.birthdate = row["birthdate"]
             else :
                 succesful = False
-                WriteLog(file, "file does not contain bithdate attribute or bithdate is misspelled or invalid.")
+                WriteLog(file, "file does not contain birthdate attribute or birthdate is misspelled or invalid.")
                 break
 
-            gender = row["gender"]
+            gender = row["gender"].lower()
             if "gender" in row and gender in ['male', 'female', 'other']:
                 row["gender"]
                 user.gender = row["gender"]
@@ -130,12 +136,8 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 WriteLog(file, "file does not contain subscription attribute or subscription is misspelled or invalid.")
                 break
 
-            if "subscription_date" in row and row["subscription_date"] != 0:
-                user.subscriptionDate = row["subscription_date"]
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain bithdate attribute or bithdate is misspelled or invalid.")
-                break
+            user.subscriptionDate = row["subscription_date"]
+
             
             session.add(User)
         if succesful:

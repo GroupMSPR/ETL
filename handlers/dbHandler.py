@@ -136,6 +136,9 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 succesful = False
                 WriteLog(file, "file does not contain bithdate attribute or bithdate is misspelled or invalid.")
                 break
+            
+            session.add(User)
+        session.commit() 
     
 
             
@@ -153,7 +156,6 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
     data = data.fillna(0)
 
-    
     try:
         for index,row in data.iterrows():
             exercise: Exercise = Exercise()

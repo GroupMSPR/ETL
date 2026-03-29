@@ -23,13 +23,17 @@ def sendToTable(data: pandas.DataFrame, file: str, session: Session):
 def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
     data = data.fillna(0)
-    if "birthdate" in data:
-        data["birthdate"] = pandas.to_datetime(data["birthdate"]).dt.date
-    
-    if "subscription_date" in data:
-        data["subscription_date"] = pandas.to_datetime(data["subscription_date"]).dt.date
 
     try: 
+        if "birthdate" in data:
+            data["birthdate"] = pandas.to_datetime(data["birthdate"]).dt.date
+        else :
+            WriteLog("missing field birthdate")
+            succesful = False
+    
+        if "subscription_date" in data:
+            data["subscription_date"] = pandas.to_datetime(data["subscription_date"]).dt.date
+
         for index,row in data.iterrows():
 
             user : User = User()
@@ -142,8 +146,6 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
             session.add(User)
         if succesful:
             session.commit() 
-    
-
             
     except Exception as ex:
         succesful = False

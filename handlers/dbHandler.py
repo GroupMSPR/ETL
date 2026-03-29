@@ -138,7 +138,8 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 break
             
             session.add(User)
-        session.commit() 
+        if succesful:
+            session.commit() 
     
 
             
@@ -195,7 +196,8 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
             exercise.difficulty_level   = row.get("difficulty_level") or ""
             exercise.instructions       = row.get("instructions") or ""
             session.add(exercise)
-        session.commit()      
+        if (succesful):
+            session.commit()      
     except Exception as ex:
         succesful = False
         session.rollback()

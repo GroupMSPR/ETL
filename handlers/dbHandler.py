@@ -27,9 +27,6 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
     try: 
         if "birthdate" in data:
             data["birthdate"] = pandas.to_datetime(data["birthdate"]).dt.date
-        else :
-            WriteLog("missing field birthdate")
-            succesful = False
     
         if "subscription_date" in data:
             data["subscription_date"] = pandas.to_datetime(data["subscription_date"]).dt.date
@@ -139,9 +136,7 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
             if "goal" in row and row.get("goal") != 0:
                 user.goal = row.get("goal")
             else :
-                succesful = False
-                WriteLog(file, "file does not contain goal attribute or goal is misspelled or invalid.")
-                break
+                user.goal = "Non renseigné"
 
             subscription = row.get("subscription")
             if "subscription" in row and subscription in ['Freemium', 'Premium', 'Premium+']:
@@ -154,7 +149,7 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
             user.date_subscription = row.get("date_subscription")
 
             
-            session.add(User)
+            session.add(user)
         if succesful:
             session.commit() 
             
@@ -279,7 +274,8 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
 def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
     data = data.fillna(0)
-    data["date"] = pandas.to_datetime(data["date"])
+    if "date" in data:
+        data["date"] = pandas.to_datetime(data["date"])
 
     users = session.query(User.user_id, User.email).all()
 

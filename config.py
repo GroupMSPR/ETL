@@ -31,8 +31,7 @@ class User(Base) :
     daily_caloric_intake    = Column(Integer)
     goal                    = Column(TEXT)
     subscription            = Column(String(50))
-    subscriptionDate        = Column(Date)
-    
+    date_subscription       = Column(Date)
 
 class Food(Base) :
     __tablename__   = "food"
@@ -67,7 +66,7 @@ class Health_metric(Base) :
 
     health_metric_id = Column(Integer, primary_key=True, autoincrement=True)
     user_id          = Column(Integer, ForeignKey("user_.user_id"), nullable=False)
-    date             = Column(DateTime, nullable=False)
+    date_            = Column(DateTime, nullable=False)
     start_weight     = Column(Numeric(15, 2), nullable=False)
     current_weight   = Column(Numeric(15, 2), nullable=False)
     avg_bpm          = Column(Numeric(15, 2), nullable=False)

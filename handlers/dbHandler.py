@@ -145,8 +145,9 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 succesful = False
                 WriteLog(file, "file does not contain subscription attribute or subscription is misspelled or invalid.")
                 break
-
-            user.date_subscription = row.get("date_subscription")
+            
+            if row.get("date_subscription") != 0:
+                user.date_subscription = row.get("date_subscription")
 
             
             session.add(user)
@@ -288,8 +289,18 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
         for index,row in data.iterrows():
             healthMetric : Health_metric = Health_metric()
 
-            if "user_email" in row and row.get("user_email") != 0:
-                healthMetric.user_id = user_map[row.get("user_email")] 
+            email = row.get("user_email")
+            if "user_email" in row and email != 0:
+                if email in user_map:
+                    healthMetric.user_id = user_map[email]
+                else :
+                    succesful = False
+                    WriteLog(file, "no user with that email")
+                    break 
+            else :
+                succesful = False
+                WriteLog(file, "file does not contain user_email attribute or user_email is misspelled.")
+                break
 
             if "date" in row and row.get("date") != 0:
                 healthMetric.date_ = row.get("date")
@@ -375,3 +386,8 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
         succesful = False
         session.rollback()
         WriteLog(file, str(ex))
+    
+    if (succesful):
+        MoveToArchive(file)
+    else :
+        MoveToError(file)

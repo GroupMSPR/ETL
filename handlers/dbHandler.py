@@ -101,22 +101,13 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 WriteLog(file, "file does not contain body_fat_pct attribute or body_fat_pct is misspelled or invalid.")
                 break
 
-
-            disease_type = row.get("disease_type") 
-            if (isinstance(disease_type, list)):
-                user.disease_type = ", ".join(disease_type)
-            elif ("disease_type" in row) :
-                user.disease_type = row.get("disease_type") or "Non renseigné"
+            constraints = row.get("constraints") 
+            if (isinstance(constraints, list)):
+                user.constraints = ", ".join(constraints)
+            elif ("constraints" in row) :
+                user.constraints = row.get("constraints") or "Non renseigné"
             else :
-                user.disease_type = "Non renseigné"
-
-            severity = row.get("severity") 
-            if (isinstance(severity, list)):
-                user.severity  = ", ".join(severity)
-            elif ("severity" in row) :
-                user.severity  = row.get("severity") or "Non renseigné"
-            else :
-                user.severity = "Non renseigné"
+                user.constraints = "Non renseigné"
 
             physicalActivityLevel = row.get("physical_activity_level")
             if "physical_activity_level" in row and physicalActivityLevel in ['Sedentary', 'Moderate', 'Active']:
@@ -206,6 +197,15 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
 
             exercise.difficulty_level   = row.get("difficulty_level") or "Non renseigné"
             exercise.instructions       = row.get("instructions") or "Non renseigné"
+
+            constraints = row.get("constraints") 
+            if (isinstance(constraints, list)):
+                exercise.constraints = ", ".join(constraints)
+            elif ("constraints" in row) :
+                exercise.constraints = row.get("constraints") or "Non renseigné"
+            else :
+                exercise.constraints = "Non renseigné"
+                
             session.add(exercise)
         if (succesful):
             session.commit()      

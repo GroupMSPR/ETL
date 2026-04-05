@@ -32,6 +32,7 @@ class User(Base) :
     goal                    = Column(TEXT)
     subscription            = Column(String(50))
     date_subscription       = Column(Date)
+    constraints             = Column(Text)
 
 class Food(Base) :
     __tablename__   = "food"
@@ -60,6 +61,7 @@ class Exercise(Base) :
     equipment           = Column(Text, nullable=False)
     difficulty_level    = Column(String(50), nullable=False)
     instructions        = Column(Text, nullable=False)
+    constraints         = Column(Text)
 
 class Health_metric(Base) :
     __tablename__ = "health_metric"

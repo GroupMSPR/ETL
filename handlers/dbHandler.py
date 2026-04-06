@@ -2,7 +2,8 @@ import pandas
 
 from sqlalchemy.orm import Session
 from config import Exercise, Food, Health_metric, User
-from fileManager import MoveToArchive, MoveToError, WriteLog
+from utils.fileManager import MoveToArchive, MoveToError, WriteLog
+from utils.dataframeFormatter import formatDataFrame
 
 def sendToTable(data: pandas.DataFrame, file: str, session: Session):
 
@@ -22,6 +23,32 @@ def sendToTable(data: pandas.DataFrame, file: str, session: Session):
 
 def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
+
+    errorMessage = ""
+    field = [
+        "email",
+        "password",
+        "first_name",
+        "last_name",
+        "birthdate",
+        "gender",
+        "weight",
+        "height",
+        "body_fat_pct",
+        "constraints",
+        "physical_activity_level",
+        "daily_caloric_intake",
+        "goal",
+        "subscription",
+        "date_subscription"
+    ]
+
+    data, errorMessage = formatDataFrame(data, field)
+    if errorMessage != "":
+        WriteLog(file, errorMessage)
+        MoveToError(file)
+        return
+
     data = data.fillna(0)
 
     try: 
@@ -157,6 +184,25 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
 
 def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
+
+    errorMessage = ""
+    field = [
+        "name_exercise",
+        "difficulty_level",
+        "type",
+        "target_muscle",
+        "secondary_muscle",
+        "equipment",
+        "instructions",
+        "constraints"
+    ]
+
+    data, errorMessage = formatDataFrame(data, field)
+    if errorMessage != "":
+        WriteLog(file, errorMessage)
+        MoveToError(file)
+        return
+        
     data = data.fillna(0)
 
     try:
@@ -223,6 +269,27 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
 
 def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
     succesful : bool = True
+
+    errorMessage = ""
+    field = [
+        "name_food",
+        "category",
+        "calories",
+        "protein",
+        "carbohydrates",
+        "fat",
+        "fiber",
+        "sugars",
+        "sodium",
+        "cholestorol"
+    ]
+
+    data, errorMessage = formatDataFrame(data, field)
+    if errorMessage != "":
+        WriteLog(file, errorMessage)
+        MoveToError(file)
+        return
+
     data = data.fillna(0)
     try: 
         for _,row in data.iterrows():
@@ -276,6 +343,29 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
 
 def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
+
+    errorMessage = ""
+    field = [
+        "user_email",
+        "date",
+        "start_weight",
+        "current_weight",
+        "avg_bpm",
+        "max_bpm",
+        "resting_bpm",
+        "steps_count",
+        "sleep_time",
+        "calories_burned",
+        "active_minute",
+        "workout_type"
+    ]
+
+    data, errorMessage = formatDataFrame(data, field)
+    if errorMessage != "":
+        WriteLog(file, errorMessage)
+        MoveToError(file)
+        return
+
     data = data.fillna(0)
     if "date" in data:
         data["date"] = pandas.to_datetime(data["date"])

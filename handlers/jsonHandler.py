@@ -2,7 +2,7 @@ import json
 import os
 
 import pandas
-from fileManager import MoveToError, WriteLog
+from utils.fileManager import MoveToError, WriteLog
 from config import TO_IMPORT_PATH
 
 def convertJsonToPanda(file):
@@ -27,3 +27,4 @@ def convertJsonToPanda(file):
         WriteLog(file, str(ex))
         MoveToError(file)
         return None
+    return df

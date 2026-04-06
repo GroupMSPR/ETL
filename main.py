@@ -4,7 +4,7 @@ import pandas
 from sqlalchemy import Connection, Engine, create_engine
 from sqlalchemy.orm import Session
 from config import TO_IMPORT_PATH, Base
-from fileManager import GetFileType
+from utils.fileManager import GetFileType
 from handlers.dbHandler import sendToTable
 from handlers.jsonHandler import convertJsonToPanda
 

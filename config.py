@@ -25,8 +25,6 @@ class User(Base) :
     height                  = Column(Integer)
     bmi                     = Column(NUMERIC(15,2))
     body_fat_pct            = Column(NUMERIC(15,2))
-    disease_type            = Column(String(50))
-    severity                = Column(String(50))
     physical_activity_level = Column(String(50))
     daily_caloric_intake    = Column(Integer)
     goal                    = Column(TEXT)

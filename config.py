@@ -30,7 +30,7 @@ class User(Base) :
     goal                    = Column(TEXT)
     subscription            = Column(String(50))
     date_subscription       = Column(Date)
-    constraints             = Column(Text)
+    constraints_             = Column(Text)
 
 class Food(Base) :
     __tablename__   = "food"

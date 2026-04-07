@@ -1,7 +1,6 @@
-from typing import Any, List
-
 import pandas
 
+from typing import Any, List
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.schema import Column
 from config import Consume, Exercise, Food, Health_metric, Practice, User
@@ -9,45 +8,42 @@ from utils.fileManager import MoveToArchive, MoveToError, WriteLog
 from utils.dataframeFormatter import formatDataFrame
 
 def sendToTable(data: pandas.DataFrame, file: str, session: Session):
+    numericDispatch = {
+        "1": sendUserToDb,
+        "2": sendExerciseToDb,
+        "3": sendFoodToDb,
+        "4": sendHealthMetricToDb,
+        "5": sendUserFoodRelationToDb,
+        "6": sendUserExerciseRelationToDb,
+    }
+
+    nameDispatch = {
+        "user": sendUserToDb,
+        "exercise": sendExerciseToDb,
+        "food": sendFoodToDb,
+        "health": sendHealthMetricToDb,
+        "consume": sendUserFoodRelationToDb,
+        "practice": sendUserExerciseRelationToDb,
+    }
 
     fileTableNumber: str = file[0]
 
-    fileLowered = file.lower()
-
-    if fileTableNumber.isnumeric():
-        if fileTableNumber == "1" :
-            sendUserToDb(data, file ,session)
-        elif fileTableNumber == "2" :
-            sendExerciseToDb(data, file, session)
-        elif fileTableNumber == "3" :
-            sendFoodToDb(data, file, session)
-        elif fileTableNumber == "4" :
-            sendHealthMetricToDb(data, file, session)
-        elif fileTableNumber == "5" :
-            sendUserFoodRelationToDb(data, file, session)
-        elif fileTableNumber == "6" :
-            sendUserExerciseRelationToDb(data, file, session)
+    if fileTableNumber.isnumeric() :
+        if fileTableNumber in numericDispatch:
+            return numericDispatch[fileTableNumber](data, file, session)
         else :
             WriteLog(file, "no matches with a table, index out of range 6")
             MoveToError(file)
             return
-    else :
-        if "user" in fileLowered :
-            sendUserToDb(data, file ,session)
-        elif "exercise" in fileLowered :
-            sendExerciseToDb(data, file, session)
-        elif "food" in fileLowered :
-            sendFoodToDb(data, file, session)
-        elif "health" in fileLowered :
-            sendHealthMetricToDb(data, file, session)
-        elif "consume" in fileLowered :
-            sendUserFoodRelationToDb(data, file, session)
-        elif "practice" in fileLowered :
-            sendUserExerciseRelationToDb(data, file, session)
-        else :
-            WriteLog(file, "no matches with a table, no index or name found")
-            MoveToError(file)
-            return
+        
+    fileLowered = file.lower()
+    
+    for name, func in nameDispatch.items():
+        if name in fileLowered:
+            return func(data, file, session)
+    
+    WriteLog(file, "no matches with a table, no index or name found")
+    MoveToError(file)
             
 def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
@@ -76,8 +72,6 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
         WriteLog(file, errorMessage)
         MoveToError(file)
         return
-
-    # data = data.fillna(0)
 
     try: 
         if "birthdate" in data:
@@ -158,6 +152,7 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 user.date_subscription = row.get("date_subscription")
 
             session.add(user)
+        
         if errorMessage != "":
             succesful = False
             WriteLog(file, errorMessage)
@@ -201,18 +196,16 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
         for _,row in data.iterrows():
             exercise: Exercise = Exercise()
 
-            exercise.daily_caloric_intake ,placeHolderMessage = addData(row, "daily_caloric_intake")
+            exercise.name ,placeHolderMessage = addData(row, "name")
             errorMessage += placeHolderMessage
 
-            if "name" in row and row.get("name") != 0:
-                exercise.name = row.get("name")
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain name attribute or name is misspelled or invalid.")
-                break
+            exercise.difficulty_level ,placeHolderMessage = addData(row, "difficulty_level")
+            if exercise.difficulty_level is None:
+                exercise.difficulty_level = "Non renseigné"
 
-            exercise.difficulty_level   = row.get("difficulty_level") or "Non renseigné"
-            exercise.type               = row.get("type") or "Non renseigné"
+            exercise.type ,placeHolderMessage = addData(row, "type")
+            if exercise.type is None:
+                exercise.type = "Non renseigné"
 
             target_muscle = row.get("target_muscle") 
             if (isinstance(target_muscle, list)):
@@ -220,9 +213,7 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
             elif ("target_muscle" in row) :
                 exercise.target_muscle  = row.get("target_muscle") or "Non renseigné"
             else :
-                succesful = False
-                WriteLog(file, "file does not contain target_muscle attribute or target_muscle is misspelled.")
-                break
+                errorMessage += "file does not contain target_muscle attribute or target_muscle is misspelled or invalid.\n"
 
             secondaryMuscle = row.get("secondary_muscle") or "No Secondary Muscle"
             if (isinstance(secondaryMuscle, list)) :
@@ -240,7 +231,9 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
             else :
                 exercise.equipment = "Non renseigné"
 
-            exercise.instructions       = row.get("instructions") or "Non renseigné"
+            exercise.instructions ,placeHolderMessage = addData(row, "instructions")
+            if exercise.instructions is None:
+                exercise.instructions = "Non renseigné"
 
             constraints = row.get("constraints") 
             if (isinstance(constraints, list)):
@@ -251,6 +244,11 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
                 exercise.constraints = "Non renseigné"
                 
             session.add(exercise)
+        
+        if errorMessage != "":
+            succesful = False
+            WriteLog(file, errorMessage)
+
         if (succesful):
             session.commit()      
     except Exception as ex:
@@ -286,6 +284,9 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
         return
 
     data = data.fillna(0)
+
+    errorMessage = ""
+
     try: 
         for _,row in data.iterrows():
 
@@ -294,9 +295,7 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
             if "name" in row and row.get("name") != 0:
                 food.name = row.get("name")
             else :
-                succesful = False
-                WriteLog(file, "file does not contain name attribute or name is misspelled.")
-                break
+                errorMessage += "file does not contain name attribute or name is misspelled or invalid.\n"
 
             food.category = row.get("category", "Non renseigné") or "Non renseigné"
             food.calories = row.get("calories", 0) 
@@ -323,14 +322,18 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
                 food.cholestorol = cholestorol
 
             session.add(food)
+        if errorMessage != "":
+            succesful = False
+            WriteLog(file, errorMessage)
+
         if succesful:
             session.commit()     
+
     except Exception as ex:
         succesful = False
         session.rollback()
         WriteLog(file, str(ex))
         
-    
     if (succesful):
         MoveToArchive(file)
     else :
@@ -361,17 +364,15 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
         MoveToError(file)
         return
 
-    data = data.fillna(0)
     if "date" in data:
         data["date"] = pandas.to_datetime(data["date"])
 
     users = session.query(User.user_id, User.email).all()
-
     user_map = {}
-
     for user in users:
         user_map[user.email] = user.user_id
 
+    errorMessage = ""
     try: 
         for _,row in data.iterrows():
             healthMetric : Health_metric = Health_metric()
@@ -381,94 +382,51 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
                 if email in user_map:
                     healthMetric.user_id = user_map[email]
                 else :
-                    succesful = False
-                    WriteLog(file, "no user with that email")
-                    break 
+                    errorMessage += "no user with that email"                    
             else :
-                succesful = False
-                WriteLog(file, "file does not contain user_email attribute or user_email is misspelled.")
-                break
+                errorMessage += "file does not contain user_email attribute or user_email is misspelled."              
 
-            if "date" in row and row.get("date") != 0:
-                healthMetric.date_ = row.get("date")
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain date attribute or date is misspelled.")
-                break
+            healthMetric.date_ ,placeHolderMessage = addData(row, "date")
+            errorMessage += placeHolderMessage
 
-            if "start_weight" in row and row.get("start_weight") != 0:
-                healthMetric.start_weight = row.get("start_weight")
-            else:
-                succesful = False
-                WriteLog(file, "file does not contain start_weight attribute or start_weight is misspelled.")
-                break
+            healthMetric.start_weight ,placeHolderMessage = addData(row, "start_weight")
+            errorMessage += placeHolderMessage
 
-            if "current_weight" in row and row.get("current_weight") != 0:
-                healthMetric.current_weight = row.get("current_weight")
-            else:
-                succesful = False
-                WriteLog(file, "file does not contain current_weight attribute or current_weight is misspelled.")
-                break
+            healthMetric.current_weight ,placeHolderMessage = addData(row, "current_weight")
+            errorMessage += placeHolderMessage
 
-            if "avg_bpm" in row and row.get("avg_bpm") != 0:
-                healthMetric.avg_bpm = row.get("avg_bpm")
-            else:
-                succesful = False
-                WriteLog(file, "file does not contain avg_bpm attribute or avg_bpm is misspelled.")
-                break
+            healthMetric.avg_bpm ,placeHolderMessage = addData(row, "avg_bpm")
+            errorMessage += placeHolderMessage
 
-            if "max_bpm" in row and row.get("max_bpm") != 0:
-                healthMetric.max_bpm = row.get("max_bpm")
-            else:
-                succesful = False
-                WriteLog(file, "file does not contain max_bpm attribute or max_bpm is misspelled.")
-                break
+            healthMetric.max_bpm ,placeHolderMessage = addData(row, "max_bpm")
+            errorMessage += placeHolderMessage
 
-            if "resting_bpm" in row and row.get("resting_bpm") != 0:
-                healthMetric.resting_bpm = row.get("resting_bpm")
-            else:
-                succesful = False
-                WriteLog(file, "file does not contain resting_bpm attribute or resting_bpm is misspelled.")
-                break
+            healthMetric.resting_bpm ,placeHolderMessage = addData(row, "resting_bpm")
+            errorMessage += placeHolderMessage
 
-            if "steps_count" in row and row.get("steps_count") != 0:
-                healthMetric.steps_count = row.get("steps_count")
-            else:
-                succesful = False
-                WriteLog(file, "file does not contain steps_count attribute or steps_count is misspelled.")
-                break
+            healthMetric.steps_count ,placeHolderMessage = addData(row, "steps_count")
+            errorMessage += placeHolderMessage
 
-            if "sleep_time" in row and row.get("sleep_time") != 0:
-                healthMetric.sleep_time = row.get("sleep_time")
-            else:
-                succesful = False
-                WriteLog(file, "file does not contain sleep_time attribute or sleep_time is misspelled.")
-                break
+            healthMetric.sleep_time ,placeHolderMessage = addData(row, "sleep_time")
+            errorMessage += placeHolderMessage
 
-            if "calories_burned" in row and row.get("calories_burned") != 0:
-                healthMetric.calories_burned = row.get("calories_burned")
-            else:
-                succesful = False
-                WriteLog(file, "file does not contain calories_burned attribute or calories_burned is misspelled.")
-                break
+            healthMetric.calories_burned ,placeHolderMessage = addData(row, "calories_burned")
+            errorMessage += placeHolderMessage
 
-            if "active_minute" in row and row.get("active_minute") != 0:
-                healthMetric.active_minute = row.get("active_minute")
-            else:
-                succesful = False
-                WriteLog(file, "file does not contain active_minute attribute or active_minute is misspelled.")
-                break
+            healthMetric.active_minute ,placeHolderMessage = addData(row, "active_minute")
+            errorMessage += placeHolderMessage
 
-            if "workout_type" in row and row.get("workout_type") != 0:
-                healthMetric.workout_type = row.get("workout_type")
-            else:
-                succesful = False
-                WriteLog(file, "file does not contain workout_type attribute or workout_type is misspelled.")
-                break
+            healthMetric.workout_type ,placeHolderMessage = addData(row, "workout_type")
+            errorMessage += placeHolderMessage
 
             session.add(healthMetric)
+        if errorMessage != "":
+            succesful = False
+            WriteLog(file, errorMessage)
+
         if succesful:
-            session.commit()     
+            session.commit()
+
     except Exception as ex:
         succesful = False
         session.rollback()

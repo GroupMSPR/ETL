@@ -1,28 +1,54 @@
-from typing import Any
+from typing import Any, List
 
 import pandas
 
 from sqlalchemy.orm import Session
-from config import Exercise, Food, Health_metric, User
+from sqlalchemy.sql.schema import Column
+from config import Consume, Exercise, Food, Health_metric, Practice, User
 from utils.fileManager import MoveToArchive, MoveToError, WriteLog
 from utils.dataframeFormatter import formatDataFrame
 
 def sendToTable(data: pandas.DataFrame, file: str, session: Session):
 
+    fileTableNumber: str = file[0]
+
     fileLowered = file.lower()
 
-    if "user" in fileLowered :
-        sendUserToDb(data, file ,session)
-    elif "exercise" in fileLowered :
-        sendExerciseToDb(data, file, session)
-    elif "food" in fileLowered :
-        sendFoodToDb(data, file, session)
-    elif "health" in fileLowered :
-        sendHealthMetricToDb(data, file, session)
+    if fileTableNumber.isnumeric():
+        if fileTableNumber == "1" :
+            sendUserToDb(data, file ,session)
+        elif fileTableNumber == "2" :
+            sendExerciseToDb(data, file, session)
+        elif fileTableNumber == "3" :
+            sendFoodToDb(data, file, session)
+        elif fileTableNumber == "4" :
+            sendHealthMetricToDb(data, file, session)
+        elif fileTableNumber == "5" :
+            sendUserFoodRelationToDb(data, file, session)
+        elif fileTableNumber == "6" :
+            sendUserExerciseRelationToDb(data, file, session)
+        else :
+            WriteLog(file, "no matches with a table, index out of range 6")
+            MoveToError(file)
+            return
     else :
-        WriteLog(file, "no matches with a table")
-        MoveToError(file)
-
+        if "user" in fileLowered :
+            sendUserToDb(data, file ,session)
+        elif "exercise" in fileLowered :
+            sendExerciseToDb(data, file, session)
+        elif "food" in fileLowered :
+            sendFoodToDb(data, file, session)
+        elif "health" in fileLowered :
+            sendHealthMetricToDb(data, file, session)
+        elif "consume" in fileLowered :
+            sendUserFoodRelationToDb(data, file, session)
+        elif "practice" in fileLowered :
+            sendUserExerciseRelationToDb(data, file, session)
+        else :
+            WriteLog(file, "no matches with a table, no index or name found")
+            MoveToError(file)
+            return
+            
 def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
 
@@ -62,7 +88,7 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
 
         errorMessage = ""
 
-        for index,row in data.iterrows():
+        for _,row in data.iterrows():
 
             user : User = User()
             
@@ -83,9 +109,9 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
             user.birthdate ,placeHolderMessage = addData(row, "birthdate")
             errorMessage += placeHolderMessage
 
-            gender = row.get("gender").lower()
-            if "gender" in row and gender in ['male', 'female', 'other']:
-                user.gender = row.get("gender")
+            gender = row.get("gender")
+            if "gender" in row and isinstance(gender, str) and gender.lower() in ['male', 'female', 'other']:
+                user.gender = gender.lower()
             else :
                 errorMessage += "file does not contain gender attribute or gender is misspelled or invalid.\n"
 
@@ -110,8 +136,8 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 user.constraints = "Non renseigné"
 
             physicalActivityLevel = row.get("physical_activity_level")
-            if "physical_activity_level" in row and physicalActivityLevel in ['Sedentary', 'Moderate', 'Active']:
-                user.physical_activity_level = row.get("physical_activity_level")
+            if "physical_activity_level" in row and isinstance(physicalActivityLevel, str) and physicalActivityLevel.lower() in ['sedentary', 'moderate', 'active']:
+                user.physical_activity_level = physicalActivityLevel.lower()
             else :
                 errorMessage += "file does not contain physical_activity_level attribute or physical_activity_level is misspelled or invalid.\n"
 
@@ -123,8 +149,8 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 user.goal = "Non renseigné"
 
             subscription = row.get("subscription")
-            if "subscription" in row and subscription in ['Freemium', 'Premium', 'Premium+']:
-                user.subscription = subscription
+            if "subscription" in row and isinstance(subscription, str) and subscription.lower() in ['freemium', 'premium', 'premium+']:
+                user.subscription = subscription.lower()
             else :
                 errorMessage += "file does not contain subscription attribute or subscription is misspelled or invalid.\n"
             
@@ -172,7 +198,7 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
 
     errorMessage = ""
     try:
-        for index,row in data.iterrows():
+        for _,row in data.iterrows():
             exercise: Exercise = Exercise()
 
             exercise.daily_caloric_intake ,placeHolderMessage = addData(row, "daily_caloric_intake")
@@ -195,7 +221,7 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
                 exercise.target_muscle  = row.get("target_muscle") or "Non renseigné"
             else :
                 succesful = False
-                WriteLog(file, "file does not contain name_exercice attribute or name_exercice is misspelled.")
+                WriteLog(file, "file does not contain target_muscle attribute or target_muscle is misspelled.")
                 break
 
             secondaryMuscle = row.get("secondary_muscle") or "No Secondary Muscle"
@@ -203,14 +229,17 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
                 exercise.secondary_muscle  = ", ".join(row.get("secondary_muscle") or [])
             elif ("secondary_muscle" in row) :
                 exercise.secondary_muscle  = secondaryMuscle
+            else :
+                exercise.secondary_muscle = "Non renseigné"
 
-            equipment = row.get("equipment") or "No Equipment"
+            equipment = row.get("equipment") or "Non renseigné"
             if (isinstance(equipment, list)) :
                 exercise.equipment  = ", ".join(row.get("equipment") or [])
-            
-            exercise.equipment  = equipment
+            elif ("equipment" in row) :
+                exercise.equipment = equipment
+            else :
+                exercise.equipment = "Non renseigné"
 
-            exercise.difficulty_level   = row.get("difficulty_level") or "Non renseigné"
             exercise.instructions       = row.get("instructions") or "Non renseigné"
 
             constraints = row.get("constraints") 
@@ -228,7 +257,6 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
         succesful = False
         session.rollback()
         WriteLog(file, str(ex))
-        return ex
     if (succesful):
         MoveToArchive(file)
     else :
@@ -239,7 +267,7 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
 
     errorMessage = ""
     field = [
-        "name_food",
+        "name",
         "category",
         "calories",
         "protein",
@@ -259,34 +287,34 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
 
     data = data.fillna(0)
     try: 
-        for index,row in data.iterrows():
+        for _,row in data.iterrows():
 
             food: Food = Food()
 
-            if "name_food" in row and row.get("name_food") != 0:
-                food.name = row.get("name_food")
+            if "name" in row and row.get("name") != 0:
+                food.name = row.get("name")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain name_food attribute or name_food is misspelled.")
+                WriteLog(file, "file does not contain name attribute or name is misspelled.")
                 break
 
-            food.category = row.get("category") or "Non renseigné"
-            food.calories = row.get("calories") 
-            food.protein = row.get("protein") 
-            food.carbohydrates = row.get("carbohydrates") 
-            food.fat = row.get("fat")
-            food.fiber = row.get("fiber")
-            food.sugars = row.get("sugars")
+            food.category = row.get("category", "Non renseigné") or "Non renseigné"
+            food.calories = row.get("calories", 0) 
+            food.protein = row.get("protein", 0) 
+            food.carbohydrates = row.get("carbohydrates", 0) 
+            food.fat = row.get("fat", 0)
+            food.fiber = row.get("fiber", 0)
+            food.sugars = row.get("sugars", 0)
 
-            sodium = row.get("sodium")  
+            sodium = row.get("sodium", 0)  
             if sodium > 32767:
-                WriteLog(file, food.name + " cholesterol is above smallint limit")
+                WriteLog(file, food.name + "sodium is above smallint limit")
                 succesful = False
                 break
             else : 
                 food.sodium = sodium
 
-            cholestorol = row.get("cholestorol") 
+            cholestorol = row.get("cholestorol", 0) 
             if cholestorol > 32767:
                 WriteLog(file, food.name + " cholesterol is above smallint limit")
                 succesful = False
@@ -345,7 +373,7 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
         user_map[user.email] = user.user_id
 
     try: 
-        for index,row in data.iterrows():
+        for _,row in data.iterrows():
             healthMetric : Health_metric = Health_metric()
 
             email = row.get("user_email")
@@ -450,6 +478,97 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
         MoveToArchive(file)
     else :
         MoveToError(file)
+
+def sendUserFoodRelationToDb(data: pandas.DataFrame, file: str, session: Session):
+    succesful : bool = True
+
+    errorMessage = ""
+    field = [
+        "email",
+        "food_name"
+    ]
+
+    data, errorMessage = formatDataFrame(data, field)
+    if errorMessage != "":
+        WriteLog(file, errorMessage)
+        MoveToError(file)
+        return
+
+    try: 
+        emails: list[Any] = data["email"].tolist()
+        foodNames: list[Any] = data["food_name"].tolist()
+
+        users: List[User] = session.query(User).filter(User.email.in_(emails)).all()
+        foods: List[Food] = session.query(Food).filter(Food.name.in_(foodNames)).all()
+
+        userMap: dict[Column[str], User] = {u.email: u for u in users}
+        foodMap: dict[Column[str], Food] = {f.name: f for f in foods}
+
+        for _,row in data.iterrows():
+            consume : Consume = Consume()
+
+            consume.food_id = foodMap.get(row.get("food_name")).food_id
+            consume.user_id = userMap.get(row.get("email")).user_id
+
+            session.add(consume)
+        
+        if succesful :
+            session.commit()
+
+    except Exception as ex:
+        succesful = False
+        session.rollback()
+        WriteLog(file, str(ex))
+    if (succesful):
+        MoveToArchive(file)
+    else :
+        MoveToError(file)
+
+def sendUserExerciseRelationToDb(data: pandas.DataFrame, file: str, session: Session):
+    succesful : bool = True
+
+    errorMessage = ""
+    field = [
+        "email",
+        "exercise_name"
+    ]
+
+    data, errorMessage = formatDataFrame(data, field)
+    if errorMessage != "":
+        WriteLog(file, errorMessage)
+        MoveToError(file)
+        return
+
+    try: 
+        emails: list[Any] = data["email"].tolist()
+        exerciseNames: list[Any] = data["exercise_name"].tolist()
+
+        users: List[User] = session.query(User).filter(User.email.in_(emails)).all()
+        exercises: List[Exercise] = session.query(Exercise).filter(Exercise.name.in_(exerciseNames)).all()
+
+        userMap: dict[Column[str], User] = {u.email: u for u in users}
+        exerciseMap: dict[Column[str], Exercise] = {e.name: e for e in exercises}
+
+        for _,row in data.iterrows():
+            practice : Practice = Practice()
+
+            practice.exercise = exerciseMap.get(row.get("exercise_name"))
+            practice.user = userMap.get(row.get("email"))
+
+            session.add(practice)
+        
+        if succesful :
+            session.commit()
+
+    except Exception as ex:
+        succesful = False
+        session.rollback()
+        WriteLog(file, str(ex))
+    if (succesful):
+        MoveToArchive(file)
+    else :
+        MoveToError(file)
+
 
 def addData(row, columnToCheck : str):
     if columnToCheck in row and pandas.notna(row.get(columnToCheck)):

@@ -1,6 +1,7 @@
 import os
 
 import pandas
+from handlers.csvHandler import convertCsvToPanda
 from sqlalchemy import Connection, Engine, create_engine
 from sqlalchemy.orm import Session
 from config import TO_IMPORT_PATH, Base
@@ -11,7 +12,7 @@ from handlers.jsonHandler import convertJsonToPanda
 
 def Main() :
     try:
-        engine: Engine = create_engine('postgresql+psycopg2://postgres:azerty@localhost:5434/mspr')
+        engine: Engine = create_engine('')
         Base.metadata.create_all(engine)
         session: Session = Session(engine)
         print("connection to db succeded")
@@ -21,14 +22,13 @@ def Main() :
         exit()
 
     filesNames : list[str] = os.listdir(TO_IMPORT_PATH)
+    filesNames = sorted(filesNames) # if there is more then 9 table we'll have to redo it to sort based on value
 
     for file in filesNames:
         data : pandas.DataFrame
         match GetFileType(os.path.join(TO_IMPORT_PATH, file)):
-            case "xml":
-                print()
-            case "csv":
-                print()
+            case "csv" | "xlsx":
+                data = convertCsvToPanda(file)
             case "json":
                 data = convertJsonToPanda(file)
             case _:

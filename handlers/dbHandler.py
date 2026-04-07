@@ -130,11 +130,11 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
 
             constraints = row.get("constraints") 
             if (isinstance(constraints, list)):
-                user.constraints = ", ".join(constraints)
+                user.constraints_ = ", ".join(constraints)
             elif ("constraints" in row) :
-                user.constraints = row.get("constraints") or "Non renseigné"
+                user.constraints_ = row.get("constraints") or "Non renseigné"
             else :
-                user.constraints = "Non renseigné"
+                user.constraints_ = "Non renseigné"
 
             physicalActivityLevel = row.get("physical_activity_level")
             if "physical_activity_level" in row and isinstance(physicalActivityLevel, str) and physicalActivityLevel.lower() in ['sedentary', 'moderate', 'active']:

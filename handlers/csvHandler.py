@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 from config import TO_IMPORT_PATH
-from fileManager import WriteLog, MoveToError
+from utils.fileManager import WriteLog, MoveToError
 
 def convertCsvToPanda(file: str):
     file_path = os.path.join(TO_IMPORT_PATH, file)

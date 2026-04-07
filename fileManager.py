@@ -12,7 +12,8 @@ def GetFileType(fileName : str) :
     mime , _ = mimetypes.guess_type(fileName)
     fileType : str = magic.from_file(fileName, mime=True)
     if (fileType == 'text/plain'):
-        return mime.split("/")[1]
+        split_file_name = fileName.split(".")
+        return split_file_name[len(split_file_name) - 1]
     else :
         return fileType.split("/")[1]
 

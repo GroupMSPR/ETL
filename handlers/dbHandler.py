@@ -494,6 +494,18 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
 def sendUserFoodRelationToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
 
+    errorMessage = ""
+    field = [
+        "email",
+        "food_name"
+    ]
+
+    data, errorMessage = formatDataFrame(data, field)
+    if errorMessage != "":
+        WriteLog(file, errorMessage)
+        MoveToError(file)
+        return
+
     try: 
         emails: list[Any] = data["email"].tolist()
         foodNames: list[Any] = data["food_name"].tolist()
@@ -526,6 +538,18 @@ def sendUserFoodRelationToDb(data: pandas.DataFrame, file: str, session: Session
 
 def sendUserExerciseRelationToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
+
+    errorMessage = ""
+    field = [
+        "email",
+        "exercise_name"
+    ]
+
+    data, errorMessage = formatDataFrame(data, field)
+    if errorMessage != "":
+        WriteLog(file, errorMessage)
+        MoveToError(file)
+        return
 
     try: 
         emails: list[Any] = data["email"].tolist()

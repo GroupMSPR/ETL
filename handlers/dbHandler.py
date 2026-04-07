@@ -236,23 +236,23 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
                 WriteLog(file, "file does not contain name_food attribute or name_food is misspelled.")
                 break
 
-            food.category = row.get("category") or "Non renseigné"
-            food.calories = row.get("calories") 
-            food.protein = row.get("protein") 
-            food.carbohydrates = row.get("carbohydrates") 
-            food.fat = row.get("fat")
-            food.fiber = row.get("fiber")
-            food.sugars = row.get("sugars")
+            food.category = row.get("category", "Non renseigné") or "Non renseigné"
+            food.calories = row.get("calories", 0) 
+            food.protein = row.get("protein", 0) 
+            food.carbohydrates = row.get("carbohydrates", 0) 
+            food.fat = row.get("fat", 0)
+            food.fiber = row.get("fiber", 0)
+            food.sugars = row.get("sugars", 0)
 
-            sodium = row.get("sodium")  
+            sodium = row.get("sodium", 0)  
             if sodium > 32767:
-                WriteLog(file, food.name + " cholesterol is above smallint limit")
+                WriteLog(file, food.name + "sodium is above smallint limit")
                 succesful = False
                 break
             else : 
                 food.sodium = sodium
 
-            cholestorol = row.get("cholestorol") 
+            cholestorol = row.get("cholestorol", 0) 
             if cholestorol > 32767:
                 WriteLog(file, food.name + " cholesterol is above smallint limit")
                 succesful = False

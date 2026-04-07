@@ -10,24 +10,45 @@ from utils.dataframeFormatter import formatDataFrame
 
 def sendToTable(data: pandas.DataFrame, file: str, session: Session):
 
+    fileTableNumber: str = file[0]
+
     fileLowered = file.lower()
 
-    if "user" in fileLowered :
-        sendUserToDb(data, file ,session)
-    elif "exercise" in fileLowered :
-        sendExerciseToDb(data, file, session)
-    elif "food" in fileLowered :
-        sendFoodToDb(data, file, session)
-    elif "health" in fileLowered :
-        sendHealthMetricToDb(data, file, session)
-    elif "consume" in fileLowered :
-        sendUserFoodRelationToDb(data, file, session)
-    elif "practice" in fileLowered :
-        sendUserExerciseRelationToDb(data, file, session)
+    if fileTableNumber.isnumeric():
+        if fileTableNumber == "1" :
+            sendUserToDb(data, file ,session)
+        elif fileTableNumber == "2" :
+            sendExerciseToDb(data, file, session)
+        elif fileTableNumber == "3" :
+            sendFoodToDb(data, file, session)
+        elif fileTableNumber == "4" :
+            sendHealthMetricToDb(data, file, session)
+        elif fileTableNumber == "5" :
+            sendUserFoodRelationToDb(data, file, session)
+        elif fileTableNumber == "6" :
+            sendUserExerciseRelationToDb(data, file, session)
+        else :
+            WriteLog(file, "no matches with a table, index out of range 6")
+            MoveToError(file)
+            return
     else :
-        WriteLog(file, "no matches with a table")
-        MoveToError(file)
-
+        if "user" in fileLowered :
+            sendUserToDb(data, file ,session)
+        elif "exercise" in fileLowered :
+            sendExerciseToDb(data, file, session)
+        elif "food" in fileLowered :
+            sendFoodToDb(data, file, session)
+        elif "health" in fileLowered :
+            sendHealthMetricToDb(data, file, session)
+        elif "consume" in fileLowered :
+            sendUserFoodRelationToDb(data, file, session)
+        elif "practice" in fileLowered :
+            sendUserExerciseRelationToDb(data, file, session)
+        else :
+            WriteLog(file, "no matches with a table, no index or name found")
+            MoveToError(file)
+            return
+            
 def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
 

@@ -1,6 +1,7 @@
 import os
 
 import pandas
+from handlers.csvHandler import convertCsvToPanda
 from sqlalchemy import Connection, Engine, create_engine
 from sqlalchemy.orm import Session
 from config import TO_IMPORT_PATH, Base
@@ -25,10 +26,8 @@ def Main() :
     for file in filesNames:
         data : pandas.DataFrame
         match GetFileType(os.path.join(TO_IMPORT_PATH, file)):
-            case "xml":
-                print()
-            case "csv":
-                print()
+            case "csv" | "xlsx":
+                data = convertCsvToPanda(file)
             case "json":
                 data = convertJsonToPanda(file)
             case _:

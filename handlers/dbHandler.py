@@ -1,3 +1,5 @@
+from typing import Any
+
 import pandas
 
 from sqlalchemy.orm import Session
@@ -49,7 +51,7 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
         MoveToError(file)
         return
 
-    data = data.fillna(0)
+    # data = data.fillna(0)
 
     try: 
         if "birthdate" in data:
@@ -58,75 +60,46 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
         if "subscription_date" in data:
             data["subscription_date"] = pandas.to_datetime(data["subscription_date"]).dt.date
 
+        errorMessage = ""
+
         for index,row in data.iterrows():
 
             user : User = User()
-
-            if "email" in row and row.get("email") != 0:
-                user.email = row.get("email")
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain email attribute or email is misspelled or invalid.")
-                break
-
-            if "password" in row and row.get("password") != 0:
-                user.password = row.get("password")
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain password attribute or password is misspelled or invalid.")
-                break
             
-            if "first_name" in row and row.get("first_name") != 0:
-                user.first_name = row.get("first_name")
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain first_name attribute or first_name is misspelled or invalid.")
-                break
+            placeHolderMessage = ""
 
-            if "last_name" in row and row.get("last_name") != 0:
-                user.last_name = row.get("last_name")
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain last_name attribute or last_name is misspelled or invalid.")
-                break 
+            user.email ,placeHolderMessage = addData(row, "email")
+            errorMessage += placeHolderMessage
 
-            if "birthdate" in row and row.get("birthdate") != 0:
-                user.birthdate = row.get("birthdate")
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain birthdate attribute or birthdate is misspelled or invalid.")
-                break
+            user.password ,placeHolderMessage = addData(row, "password")
+            errorMessage += placeHolderMessage
+            
+            user.first_name ,placeHolderMessage = addData(row, "first_name")
+            errorMessage += placeHolderMessage
+
+            user.last_name ,placeHolderMessage = addData(row, "last_name")
+            errorMessage += placeHolderMessage
+
+            user.birthdate ,placeHolderMessage = addData(row, "birthdate")
+            errorMessage += placeHolderMessage
 
             gender = row.get("gender").lower()
             if "gender" in row and gender in ['male', 'female', 'other']:
                 user.gender = row.get("gender")
             else :
-                succesful = False
-                WriteLog(file, "file does not contain gender attribute or gender is misspelled or invalid.")
-                break
+                errorMessage += "file does not contain gender attribute or gender is misspelled or invalid.\n"
 
-            if "weight" in row and row.get("weight") != 0:
-                user.weight = row.get("weight")
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain weight attribute or weight is misspelled or invalid.")
-                break
-            
-            if "height" in row and row.get("height") != 0:
-                user.height = row.get("height")
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain height attribute or height is misspelled or invalid.")
-                break
+            user.weight ,placeHolderMessage = addData(row, "weight")
+            errorMessage += placeHolderMessage
 
-            user.bmi = round(user.weight / (user.height**2), 2) 
+            user.height ,placeHolderMessage = addData(row, "height")
+            errorMessage += placeHolderMessage
 
-            if "body_fat_pct" in row and row.get("body_fat_pct") != 0:
-                user.body_fat_pct = row.get("body_fat_pct")
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain body_fat_pct attribute or body_fat_pct is misspelled or invalid.")
-                break
+            if user.weight is not None and user.weight is not None:
+                user.bmi = round(user.weight / (user.height**2), 2) 
+
+            user.body_fat_pct ,placeHolderMessage = addData(row, "body_fat_pct")
+            errorMessage += placeHolderMessage
 
             constraints = row.get("constraints") 
             if (isinstance(constraints, list)):
@@ -140,35 +113,29 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
             if "physical_activity_level" in row and physicalActivityLevel in ['Sedentary', 'Moderate', 'Active']:
                 user.physical_activity_level = row.get("physical_activity_level")
             else :
-                succesful = False
-                WriteLog(file, "file does not contain physical_activity_level attribute or physical_activity_level is misspelled or invalid.")
-                break
+                errorMessage += "file does not contain physical_activity_level attribute or physical_activity_level is misspelled or invalid.\n"
 
-            if "daily_caloric_intake" in row and row.get("daily_caloric_intake") != 0:
-                user.daily_caloric_intake = row.get("daily_caloric_intake")
-            else :
-                succesful = False
-                WriteLog(file, "file does not contain daily_caloric_intake attribute or daily_caloric_intake is misspelled or invalid.")
-                break
+            user.daily_caloric_intake ,placeHolderMessage = addData(row, "daily_caloric_intake")
+            errorMessage += placeHolderMessage
 
-            if "goal" in row and row.get("goal") != 0:
-                user.goal = row.get("goal")
-            else :
+            user.goal ,placeHolderMessage = addData(row, "goal")
+            if placeHolderMessage != "":
                 user.goal = "Non renseigné"
 
             subscription = row.get("subscription")
             if "subscription" in row and subscription in ['Freemium', 'Premium', 'Premium+']:
                 user.subscription = subscription
             else :
-                succesful = False
-                WriteLog(file, "file does not contain subscription attribute or subscription is misspelled or invalid.")
-                break
+                errorMessage += "file does not contain subscription attribute or subscription is misspelled or invalid.\n"
             
-            if row.get("date_subscription") != 0:
+            if "date_subscription" in row and pandas.notna(row.get("date_subscription")) :
                 user.date_subscription = row.get("date_subscription")
 
-            
             session.add(user)
+        if errorMessage != "":
+            succesful = False
+            WriteLog(file, errorMessage)
+
         if succesful:
             session.commit() 
             
@@ -187,7 +154,7 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
 
     errorMessage = ""
     field = [
-        "name_exercise",
+        "name",
         "difficulty_level",
         "type",
         "target_muscle",
@@ -202,18 +169,20 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
         WriteLog(file, errorMessage)
         MoveToError(file)
         return
-        
-    data = data.fillna(0)
 
+    errorMessage = ""
     try:
         for index,row in data.iterrows():
             exercise: Exercise = Exercise()
 
-            if "name_exercise" in row and row.get("name_exercise") != 0:
-                exercise.name = row.get("name_exercise")
+            exercise.daily_caloric_intake ,placeHolderMessage = addData(row, "daily_caloric_intake")
+            errorMessage += placeHolderMessage
+
+            if "name" in row and row.get("name") != 0:
+                exercise.name = row.get("name")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain name_exercise attribute or name_exercise is misspelled or invalid.")
+                WriteLog(file, "file does not contain name attribute or name is misspelled or invalid.")
                 break
 
             exercise.difficulty_level   = row.get("difficulty_level") or "Non renseigné"
@@ -481,3 +450,9 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
         MoveToArchive(file)
     else :
         MoveToError(file)
+
+def addData(row, columnToCheck : str):
+    if columnToCheck in row and pandas.notna(row.get(columnToCheck)):
+        return row.get(columnToCheck), "" 
+    else :
+        return None, f"file does not contain {columnToCheck} attribute or {columnToCheck} is misspelled or invalid.\n"

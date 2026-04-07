@@ -15,17 +15,17 @@ def sendToTable(data: pandas.DataFrame, file: str, session: Session):
     fileLowered = file.lower()
 
     if fileTableNumber.isnumeric():
-        if "user" in fileLowered :
+        if fileTableNumber == "1" :
             sendUserToDb(data, file ,session)
-        elif "exercise" in fileLowered :
+        elif fileTableNumber == "2" :
             sendExerciseToDb(data, file, session)
-        elif "food" in fileLowered :
+        elif fileTableNumber == "3" :
             sendFoodToDb(data, file, session)
-        elif "health" in fileLowered :
+        elif fileTableNumber == "4" :
             sendHealthMetricToDb(data, file, session)
-        elif "consume" in fileLowered :
+        elif fileTableNumber == "5" :
             sendUserFoodRelationToDb(data, file, session)
-        elif "practice" in fileLowered :
+        elif fileTableNumber == "6" :
             sendUserExerciseRelationToDb(data, file, session)
         else :
             WriteLog(file, "no matches with a table, index out of range 6")

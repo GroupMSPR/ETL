@@ -27,4 +27,3 @@ def convertJsonToPanda(file):
         WriteLog(file, str(ex))
         MoveToError(file)
         return None
-    return df

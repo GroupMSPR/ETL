@@ -307,17 +307,13 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
 
             sodium = row.get("sodium", 0)  
             if sodium > 32767:
-                WriteLog(file, food.name + "sodium is above smallint limit")
-                succesful = False
-                break
+                errorMessage += "sodium is above smallint limit\n"
             else : 
                 food.sodium = sodium
 
             cholestorol = row.get("cholestorol", 0) 
             if cholestorol > 32767:
-                WriteLog(file, food.name + " cholesterol is above smallint limit")
-                succesful = False
-                break
+                errorMessage += "cholesterol is above smallint limit\n"
             else :
                 food.cholestorol = cholestorol
 
@@ -382,9 +378,9 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
                 if email in user_map:
                     healthMetric.user_id = user_map[email]
                 else :
-                    errorMessage += "no user with that email"                    
+                    errorMessage += "no user with that email\n"                    
             else :
-                errorMessage += "file does not contain user_email attribute or user_email is misspelled."              
+                errorMessage += "file does not contain user_email attribute or user_email is misspelled.\n"              
 
             healthMetric.date_ ,placeHolderMessage = addData(row, "date")
             errorMessage += placeHolderMessage
@@ -526,7 +522,6 @@ def sendUserExerciseRelationToDb(data: pandas.DataFrame, file: str, session: Ses
         MoveToArchive(file)
     else :
         MoveToError(file)
-
 
 def addData(row, columnToCheck : str):
     if columnToCheck in row and pandas.notna(row.get(columnToCheck)):

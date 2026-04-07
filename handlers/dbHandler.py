@@ -31,7 +31,7 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
         if "subscription_date" in data:
             data["subscription_date"] = pandas.to_datetime(data["subscription_date"]).dt.date
 
-        for index,row in data.iterrows():
+        for _,row in data.iterrows():
 
             user : User = User()
 
@@ -70,9 +70,9 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 WriteLog(file, "file does not contain birthdate attribute or birthdate is misspelled or invalid.")
                 break
 
-            gender = row.get("gender").lower()
-            if "gender" in row and gender in ['male', 'female', 'other']:
-                user.gender = row.get("gender")
+            gender = row.get("gender")
+            if "gender" in row and isinstance(gender, str) and gender.lower() in ['male', 'female', 'other']:
+                user.gender = gender.lower()
             else :
                 succesful = False
                 WriteLog(file, "file does not contain gender attribute or gender is misspelled or invalid.")
@@ -110,8 +110,8 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 user.constraints = "Non renseigné"
 
             physicalActivityLevel = row.get("physical_activity_level")
-            if "physical_activity_level" in row and physicalActivityLevel in ['Sedentary', 'Moderate', 'Active']:
-                user.physical_activity_level = row.get("physical_activity_level")
+            if "physical_activity_level" in row and isinstance(physicalActivityLevel, str) and physicalActivityLevel.lower() in ['sedentary', 'moderate', 'active']:
+                user.physical_activity_level = physicalActivityLevel.lower()
             else :
                 succesful = False
                 WriteLog(file, "file does not contain physical_activity_level attribute or physical_activity_level is misspelled or invalid.")
@@ -130,8 +130,8 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 user.goal = "Non renseigné"
 
             subscription = row.get("subscription")
-            if "subscription" in row and subscription in ['Freemium', 'Premium', 'Premium+']:
-                user.subscription = subscription
+            if "subscription" in row and isinstance(subscription, str) and subscription.lower() in ['freemium', 'premium', 'premium+']:
+                user.subscription = subscription.lower()
             else :
                 succesful = False
                 WriteLog(file, "file does not contain subscription attribute or subscription is misspelled or invalid.")
@@ -160,7 +160,7 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
     data = data.fillna(0)
 
     try:
-        for index,row in data.iterrows():
+        for _,row in data.iterrows():
             exercise: Exercise = Exercise()
 
             if "name_exercise" in row and row.get("name_exercise") != 0:
@@ -180,7 +180,7 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
                 exercise.target_muscle  = row.get("target_muscle") or "Non renseigné"
             else :
                 succesful = False
-                WriteLog(file, "file does not contain name_exercice attribute or name_exercice is misspelled.")
+                WriteLog(file, "file does not contain target_muscle attribute or target_muscle is misspelled.")
                 break
 
             secondaryMuscle = row.get("secondary_muscle") or "No Secondary Muscle"
@@ -188,14 +188,17 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
                 exercise.secondary_muscle  = ", ".join(row.get("secondary_muscle") or [])
             elif ("secondary_muscle" in row) :
                 exercise.secondary_muscle  = secondaryMuscle
+            else :
+                exercise.secondary_muscle = "Non renseigné"
 
-            equipment = row.get("equipment") or "No Equipment"
+            equipment = row.get("equipment") or "Non renseigné"
             if (isinstance(equipment, list)) :
                 exercise.equipment  = ", ".join(row.get("equipment") or [])
-            
-            exercise.equipment  = equipment
+            elif ("equipment" in row) :
+                exercise.equipment = equipment
+            else :
+                exercise.equipment = "Non renseigné"
 
-            exercise.difficulty_level   = row.get("difficulty_level") or "Non renseigné"
             exercise.instructions       = row.get("instructions") or "Non renseigné"
 
             constraints = row.get("constraints") 
@@ -213,7 +216,6 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
         succesful = False
         session.rollback()
         WriteLog(file, str(ex))
-        return ex
     if (succesful):
         MoveToArchive(file)
     else :
@@ -223,7 +225,7 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
     succesful : bool = True
     data = data.fillna(0)
     try: 
-        for index,row in data.iterrows():
+        for _,row in data.iterrows():
 
             food: Food = Food()
 
@@ -286,7 +288,7 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
         user_map[user.email] = user.user_id
 
     try: 
-        for index,row in data.iterrows():
+        for _,row in data.iterrows():
             healthMetric : Health_metric = Health_metric()
 
             email = row.get("user_email")

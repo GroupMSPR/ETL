@@ -11,7 +11,7 @@ from handlers.jsonHandler import convertJsonToPanda
 
 def Main() :
     try:
-        engine: Engine = create_engine('postgresql+psycopg2://postgres:azerty@localhost:5434/mspr')
+        engine: Engine = create_engine('')
         Base.metadata.create_all(engine)
         session: Session = Session(engine)
         print("connection to db succeded")

@@ -1,26 +1,54 @@
+from typing import Any, List
+
 import pandas
 
 from sqlalchemy.orm import Session
-from config import Exercise, Food, Health_metric, User
+from sqlalchemy.sql.schema import Column
+from config import Consume, Exercise, Food, Health_metric, Practice, User
 from utils.fileManager import MoveToArchive, MoveToError, WriteLog
 from utils.dataframeFormatter import formatDataFrame
 
 def sendToTable(data: pandas.DataFrame, file: str, session: Session):
 
+    fileTableNumber: str = file[0]
+
     fileLowered = file.lower()
 
-    if "user" in fileLowered :
-        sendUserToDb(data, file ,session)
-    elif "exercise" in fileLowered :
-        sendExerciseToDb(data, file, session)
-    elif "food" in fileLowered :
-        sendFoodToDb(data, file, session)
-    elif "health" in fileLowered :
-        sendHealthMetricToDb(data, file, session)
+    if fileTableNumber.isnumeric():
+        if "user" in fileLowered :
+            sendUserToDb(data, file ,session)
+        elif "exercise" in fileLowered :
+            sendExerciseToDb(data, file, session)
+        elif "food" in fileLowered :
+            sendFoodToDb(data, file, session)
+        elif "health" in fileLowered :
+            sendHealthMetricToDb(data, file, session)
+        elif "consume" in fileLowered :
+            sendUserFoodRelationToDb(data, file, session)
+        elif "practice" in fileLowered :
+            sendUserExerciseRelationToDb(data, file, session)
+        else :
+            WriteLog(file, "no matches with a table, index out of range 6")
+            MoveToError(file)
+            return
     else :
-        WriteLog(file, "no matches with a table")
-        MoveToError(file)
-
+        if "user" in fileLowered :
+            sendUserToDb(data, file ,session)
+        elif "exercise" in fileLowered :
+            sendExerciseToDb(data, file, session)
+        elif "food" in fileLowered :
+            sendFoodToDb(data, file, session)
+        elif "health" in fileLowered :
+            sendHealthMetricToDb(data, file, session)
+        elif "consume" in fileLowered :
+            sendUserFoodRelationToDb(data, file, session)
+        elif "practice" in fileLowered :
+            sendUserExerciseRelationToDb(data, file, session)
+        else :
+            WriteLog(file, "no matches with a table, no index or name found")
+            MoveToError(file)
+            return
+            
 def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True
 
@@ -130,11 +158,11 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
 
             constraints = row.get("constraints") 
             if (isinstance(constraints, list)):
-                user.constraints_ = ", ".join(constraints)
+                user.constraints = ", ".join(constraints)
             elif ("constraints" in row) :
-                user.constraints_ = row.get("constraints") or "Non renseigné"
+                user.constraints = row.get("constraints") or "Non renseigné"
             else :
-                user.constraints_ = "Non renseigné"
+                user.constraints = "Non renseigné"
 
             physicalActivityLevel = row.get("physical_activity_level")
             if "physical_activity_level" in row and isinstance(physicalActivityLevel, str) and physicalActivityLevel.lower() in ['sedentary', 'moderate', 'active']:
@@ -187,7 +215,7 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
 
     errorMessage = ""
     field = [
-        "name_exercise",
+        "name",
         "difficulty_level",
         "type",
         "target_muscle",
@@ -209,11 +237,11 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
         for _,row in data.iterrows():
             exercise: Exercise = Exercise()
 
-            if "name_exercise" in row and row.get("name_exercise") != 0:
-                exercise.name = row.get("name_exercise")
+            if "name" in row and row.get("name") != 0:
+                exercise.name = row.get("name")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain name_exercise attribute or name_exercise is misspelled or invalid.")
+                WriteLog(file, "file does not contain name attribute or name is misspelled or invalid.")
                 break
 
             exercise.difficulty_level   = row.get("difficulty_level") or "Non renseigné"
@@ -272,7 +300,7 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
 
     errorMessage = ""
     field = [
-        "name_food",
+        "name",
         "category",
         "calories",
         "protein",
@@ -296,11 +324,11 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
 
             food: Food = Food()
 
-            if "name_food" in row and row.get("name_food") != 0:
-                food.name = row.get("name_food")
+            if "name" in row and row.get("name") != 0:
+                food.name = row.get("name")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain name_food attribute or name_food is misspelled.")
+                WriteLog(file, "file does not contain name attribute or name is misspelled.")
                 break
 
             food.category = row.get("category", "Non renseigné") or "Non renseigné"
@@ -479,6 +507,96 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
         session.rollback()
         WriteLog(file, str(ex))
     
+    if (succesful):
+        MoveToArchive(file)
+    else :
+        MoveToError(file)
+
+def sendUserFoodRelationToDb(data: pandas.DataFrame, file: str, session: Session):
+    succesful : bool = True
+
+    errorMessage = ""
+    field = [
+        "email",
+        "food_name"
+    ]
+
+    data, errorMessage = formatDataFrame(data, field)
+    if errorMessage != "":
+        WriteLog(file, errorMessage)
+        MoveToError(file)
+        return
+
+    try: 
+        emails: list[Any] = data["email"].tolist()
+        foodNames: list[Any] = data["food_name"].tolist()
+
+        users: List[User] = session.query(User).filter(User.email.in_(emails)).all()
+        foods: List[Food] = session.query(Food).filter(Food.name.in_(foodNames)).all()
+
+        userMap: dict[Column[str], User] = {u.email: u for u in users}
+        foodMap: dict[Column[str], Food] = {f.name: f for f in foods}
+
+        for _,row in data.iterrows():
+            consume : Consume = Consume()
+
+            consume.food_id = foodMap.get(row.get("food_name")).food_id
+            consume.user_id = userMap.get(row.get("email")).user_id
+
+            session.add(consume)
+        
+        if succesful :
+            session.commit()
+
+    except Exception as ex:
+        succesful = False
+        session.rollback()
+        WriteLog(file, str(ex))
+    if (succesful):
+        MoveToArchive(file)
+    else :
+        MoveToError(file)
+
+def sendUserExerciseRelationToDb(data: pandas.DataFrame, file: str, session: Session):
+    succesful : bool = True
+
+    errorMessage = ""
+    field = [
+        "email",
+        "exercise_name"
+    ]
+
+    data, errorMessage = formatDataFrame(data, field)
+    if errorMessage != "":
+        WriteLog(file, errorMessage)
+        MoveToError(file)
+        return
+
+    try: 
+        emails: list[Any] = data["email"].tolist()
+        exerciseNames: list[Any] = data["exercise_name"].tolist()
+
+        users: List[User] = session.query(User).filter(User.email.in_(emails)).all()
+        exercises: List[Exercise] = session.query(Exercise).filter(Exercise.name.in_(exerciseNames)).all()
+
+        userMap: dict[Column[str], User] = {u.email: u for u in users}
+        exerciseMap: dict[Column[str], Exercise] = {e.name: e for e in exercises}
+
+        for _,row in data.iterrows():
+            practice : Practice = Practice()
+
+            practice.exercise = exerciseMap.get(row.get("exercise_name"))
+            practice.user = userMap.get(row.get("email"))
+
+            session.add(practice)
+        
+        if succesful :
+            session.commit()
+
+    except Exception as ex:
+        succesful = False
+        session.rollback()
+        WriteLog(file, str(ex))
     if (succesful):
         MoveToArchive(file)
     else :

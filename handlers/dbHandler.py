@@ -273,7 +273,13 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
             else :
                 exercise.equipment = "Non renseigné"
 
-            exercise.instructions       = row.get("instructions") or "Non renseigné"
+            instructions = row.get("instructions") or "Non renseigné"
+            if (isinstance(instructions, list)) :
+                exercise.instructions  = ", ".join(row.get("instructions") or [])
+            elif ("instructions" in row) :
+                exercise.instructions = instructions
+            else :
+                exercise.instructions = "Non renseigné"
 
             constraints = row.get("constraints") 
             if (isinstance(constraints, list)):

@@ -1,0 +1,83 @@
+Table info
+
+les fichiers récupérés sur ces champs
+
+si le fichier commence par un chiffre, il sera considéré comme déterminant le type
+
+type 1
+User 
+    field = [
+        "email",
+        "password",
+        "first_name",
+        "last_name",
+        "birthdate",
+        "gender",
+        "weight",
+        "height",
+        "body_fat_pct",
+        "constraints",
+        "physical_activity_level",
+        "daily_caloric_intake",
+        "goal",
+        "subscription",
+        "date_subscription"
+    ]
+
+type 2
+Exercice 
+    field = [
+        "name_exercise",
+        "difficulty_level",
+        "type",
+        "target_muscle",
+        "secondary_muscle",
+        "equipment",
+        "instructions",
+        "constraints"
+    ]
+type 3
+food 
+    field = [
+        "name_food",
+        "category",
+        "calories",
+        "protein",
+        "carbohydrates",
+        "fat",
+        "fiber",
+        "sugars",
+        "sodium",
+        "cholesterol"
+    ]
+
+type 4
+health metric 
+    field = [
+        "user_email",
+        "date",
+        "start_weight",
+        "current_weight",
+        "avg_bpm",
+        "max_bpm",
+        "resting_bpm",
+        "steps_count",
+        "sleep_time",
+        "calories_burned",
+        "active_minute",
+        "workout_type"
+    ]
+
+type 5
+user_food relation 
+    field = [
+        "email",
+        "food_name"
+    ]
+
+type 6
+User_Exercise Relation
+    field = [
+        "email",
+        "exercise_name"
+    ]

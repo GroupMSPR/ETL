@@ -77,7 +77,7 @@ class Food(Base) :
 
     consumes = relationship("Consume", back_populates="food")
 
-class Exercise(Base) :
+class Exercise(Base) : 
 
     __tablename__       = "exercises"
     

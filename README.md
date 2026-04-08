@@ -1,64 +1,64 @@
 # 🧠 HealthAiCoach ETL
 
-ETL pipeline for importing and processing health-related data files into the HealthAiCoach system.
+Pipeline ETL pour l’import et le traitement automatisé des données de santé dans le système HealthAiCoach.
 
 ---
 
-## 📦 Supported File Formats
+## 📦 Formats de fichiers supportés
 
-Place your files in the appropriate folders using one of the following formats:
+Déposez vos fichiers dans les dossiers appropriés en respectant l’un des formats suivants :
 
 - `CSV`
 - `XLSX`
 - `JSON`
-  - Must be either:
-    - a list  
-    - or an object containing a list named `data`
+  - Doit être :
+    - une liste  
+    - ou un objet contenant une liste appelée `data`
 
 ---
 
-## 🗂️ Folder Structure
+## 🗂️ Organisation des dossiers
 
-Each folder represents a database table and **must be prefixed with a number**:
+Chaque dossier correspond à une table en base de données et **doit être préfixé par un chiffre** :
 
-| Prefix | Table Name                |
-|--------|--------------------------|
-| 1      | User                     |
-| 2      | Exercise                 |
-| 3      | Food                     |
-| 4      | Health Metric            |
-| 5      | Consume (`user_food`)    |
-| 6      | Practice (`user_exercise`)|
-
----
-
-## ⚙️ Processing Logic
-
-### ✅ Successful Import
-- File is moved to the `Archive/` folder  
-- Filename is updated with the **import date and time**
-
-### ❌ Import Error
-- File is moved to the `Error/` folder  
-- A log file is generated in the `Log/` folder with error details  
+| Préfixe | Nom de la table           |
+|--------|----------------------------|
+| 1      | User                       |
+| 2      | Exercise                   |
+| 3      | Food                       |
+| 4      | Health Metric              |
+| 5      | Consume (`user_food`)      |
+| 6      | Practice (`user_exercise`) |
 
 ---
 
-## 📝 Notes
+## ⚙️ Logique de traitement
 
-- Ensure files are correctly formatted before import  
-- JSON files must strictly follow the expected structure  
-- Logs can be used for debugging failed imports  
+### ✅ Import réussi
+- Le fichier est déplacé dans le dossier `Archive/`  
+- Le nom du fichier est enrichi avec la **date et l’heure d’import**
+
+### ❌ Erreur lors de l’import
+- Le fichier est déplacé dans le dossier `Error/`  
+- Un fichier de log est généré dans le dossier `Log/` avec le détail de l’erreur  
 
 ---
 
-## 🚀 Quick Summary
+## 📝 Remarques
 
-1. Drop files into the correct folder  
-2. ETL processes them automatically  
-3. Check:
-   - `Archive/` → success  
-   - `Error/` → failed files  
-   - `Log/` → error details  
+- Vérifiez le format des fichiers avant import  
+- Les fichiers JSON doivent respecter strictement la structure attendue  
+- Consultez les logs pour analyser les erreurs  
+
+---
+
+## 🚀 Résumé rapide
+
+1. Déposer les fichiers dans le bon dossier  
+2. Le ETL les traite automatiquement  
+3. Vérifier :
+   - `Archive/` → imports réussis  
+   - `Error/` → fichiers en erreur  
+   - `Log/` → détails des erreurs  
 
 ---

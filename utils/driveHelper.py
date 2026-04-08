@@ -1,3 +1,4 @@
+import base64
 import datetime
 import io
 import os
@@ -9,14 +10,29 @@ from googleapiclient.http import MediaIoBaseDownload
 from google.auth.transport.requests import Request
 import pickle
 
+from config import TMP_PATH
+
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
 def get_drive_service():
     creds = None
 
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
+    token_b64 = os.environ["GOOGLE_TOKEN_PICKLE"]
+
+    path = os.path.join(TMP_PATH,"token.pickle")
+
+    if os.path.exists(path):
+        with open(path, 'rb') as token:
             creds = pickle.load(token)
+            return build('drive', 'v3', credentials=creds)
+
+    with open(path, "wb") as f:
+        f.write(base64.b64decode(token_b64))
+
+    if os.path.exists(path):
+        with open(path, 'rb') as token:
+            creds = pickle.load(token)
+            return build('drive', 'v3', credentials=creds)
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:

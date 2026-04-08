@@ -161,11 +161,11 @@ def sendUserToDb(data: pandas.DataFrame, file, session: Session, service: Resour
 
             constraints = row.get("constraints") 
             if (isinstance(constraints, list)):
-                user.constraints = ", ".join(constraints)
+                user.constraints_ = ", ".join(constraints)
             elif ("constraints" in row) :
-                user.constraints = row.get("constraints") or "Non renseigné"
+                user.constraints_ = row.get("constraints") or "Non renseigné"
             else :
-                user.constraints = "Non renseigné"
+                user.constraints_ = "Non renseigné"
 
             physicalActivityLevel = row.get("physical_activity_level")
             if "physical_activity_level" in row and isinstance(physicalActivityLevel, str) and physicalActivityLevel.lower() in ['sedentary', 'moderate', 'active']:
@@ -218,7 +218,7 @@ def sendExerciseToDb(data: pandas.DataFrame, file, session: Session, service: Re
 
     errorMessage = ""
     field = [
-        "name",
+        "name_exercise",
         "difficulty_level",
         "type",
         "target_muscle",
@@ -240,8 +240,8 @@ def sendExerciseToDb(data: pandas.DataFrame, file, session: Session, service: Re
         for _,row in data.iterrows():
             exercise: Exercise = Exercise()
 
-            if "name" in row and row.get("name") != 0:
-                exercise.name = row.get("name")
+            if "name_exercise" in row and row.get("name_exercise") != 0:
+                exercise.name = row.get("name_exercise")
             else :
                 succesful = False
                 WriteLog(service, LOG_ID, file["name"], "file does not contain name attribute or name is misspelled or invalid.")
@@ -309,7 +309,7 @@ def sendFoodToDb(data: pandas.DataFrame, file, session: Session, service: Resour
 
     errorMessage = ""
     field = [
-        "name",
+        "name_food",
         "category",
         "calories",
         "protein",
@@ -333,8 +333,8 @@ def sendFoodToDb(data: pandas.DataFrame, file, session: Session, service: Resour
 
             food: Food = Food()
 
-            if "name" in row and row.get("name") != 0:
-                food.name = row.get("name")
+            if "name_food" in row and row.get("name_food") != 0:
+                food.name = row.get("name_food")
             else :
                 succesful = False
                 WriteLog(service, LOG_ID, file["name"], "file does not contain name attribute or name is misspelled.")

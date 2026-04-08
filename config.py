@@ -55,10 +55,7 @@ class User(Base) :
     goal                    = Column(TEXT)
     subscription            = Column(String(50))
     date_subscription       = Column(Date)
-    constraints            = Column(Text)
-
-    consumes = relationship("Consume", back_populates="user")
-    practice = relationship("Practice", back_populates="user")
+    constraints_             = Column(Text)
 
 class Food(Base) :
     __tablename__   = "foods"
@@ -75,8 +72,6 @@ class Food(Base) :
     sodium          = Column(SMALLINT)
     cholesterol     = Column(SMALLINT)
 
-    consumes = relationship("Consume", back_populates="food")
-
 class Exercise(Base) :
 
     __tablename__       = "exercises"
@@ -90,8 +85,6 @@ class Exercise(Base) :
     difficulty_level    = Column(String(50), nullable=False)
     instructions        = Column(Text, nullable=False)
     constraints         = Column(Text)
-
-    practice = relationship("Practice", back_populates="exercise")
 
 class Health_metric(Base) :
     __tablename__ = "health_metrics"

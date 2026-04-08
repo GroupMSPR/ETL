@@ -1,64 +1,49 @@
-# 🧠 HealthAiCoach ETL
+# 🧠 HealthAiCoach ETL – Déploiement et Configuration
 
-Pipeline ETL pour l’import et le traitement automatisé des données de santé dans le système HealthAiCoach.
-
----
-
-## 📦 Formats de fichiers supportés
-
-Déposez vos fichiers dans les dossiers appropriés en respectant l’un des formats suivants :
-
-- `CSV`
-- `XLSX`
-- `JSON`
-  - Doit être :
-    - une liste  
-    - ou un objet contenant une liste appelée `data`
+Cette version du pipeline ETL permet l’import et le traitement automatisé des données de santé, avec intégration Google Drive pour la récupération automatique des fichiers.
 
 ---
 
-## 🗂️ Organisation des dossiers
+## 📥 Déploiement
 
-Chaque dossier correspond à une table en base de données et **doit être préfixé par un chiffre** :
+1. **Cloner le projet** :
+   git clone https://github.com/GroupMSPR/ETL.git
+   cd HealthAiCoach
 
-| Préfixe | Nom de la table           |
-|--------|----------------------------|
-| 1      | User                       |
-| 2      | Exercise                   |
-| 3      | Food                       |
-| 4      | Health Metric              |
-| 5      | Consume (`user_food`)      |
-| 6      | Practice (`user_exercise`) |
+2. **Installer les dépendances** :
+   pip install -r requirements.txt
 
----
-
-## ⚙️ Logique de traitement
-
-### ✅ Import réussi
-- Le fichier est déplacé dans le dossier `Archive/`  
-- Le nom du fichier est enrichi avec la **date et l’heure d’import**
-
-### ❌ Erreur lors de l’import
-- Le fichier est déplacé dans le dossier `Error/`  
-- Un fichier de log est généré dans le dossier `Log/` avec le détail de l’erreur  
+3. **Créer l’arborescence des dossiers dans Google Drive** :
+   ETL/
+     ├─ Log/
+     ├─ Archive/
+     ├─ ToImport/
+     └─ Error/
 
 ---
 
-## 📝 Remarques
+## 🔑 Configuration Google Drive
 
-- Vérifiez le format des fichiers avant import  
-- Les fichiers JSON doivent respecter strictement la structure attendue  
-- Consultez les logs pour analyser les erreurs  
+1. Aller sur https://console.cloud.google.com/apis/credentials
+2. Créer un **OAuth 2.0 Client ID**
+3. Ajouter un **Client Secret** et télécharger le fichier JSON
+4. Renommer ce fichier en `credentials.json` et le placer à la racine du projet
+
+---
+
+## ⚙️ Initialisation du service Google Drive
+
+1. Décommenter le code dans la fonction `get_drive_service` de `driveHelper.py`
+2. Lancer le projet. Une fenêtre Google s’ouvrira pour connecter votre compte.
+   - Cela générera automatiquement un fichier `token.pickle` pour authentifier les futures connexions.
+3. Vous pouvez laisser le code décommenté ou le remettre commenté selon que vous souhaitez réautoriser l’accès si le token expire.
 
 ---
 
-## 🚀 Résumé rapide
+## 📂 Logique ETL
 
-1. Déposer les fichiers dans le bon dossier  
-2. Le ETL les traite automatiquement  
-3. Vérifier :
-   - `Archive/` → imports réussis  
-   - `Error/` → fichiers en erreur  
-   - `Log/` → détails des erreurs  
-
----
+- Les fichiers à traiter doivent être déposés dans `ETL/ToImport/`
+- Après traitement :
+  - ✅ `ETL/Archive/` → fichiers importés avec succès (nom enrichi avec date/heure)
+  - ❌ `ETL/Error/` → fichiers ayant rencontré une erreur
+  - `ETL/Log/` → détails des erreurs

@@ -26,17 +26,18 @@ def sendToTable(data: pandas.DataFrame, file: str, session: Session):
             WriteLog(file, "no matches with a table, index out of range 6")
             MoveToError(file)
             return
-    if "user" in fileLowered :
-        sendUserToDb(data, file ,session)
-    elif "exercise" in fileLowered :
-        sendExerciseToDb(data, file, session)
-    elif "food" in fileLowered :
-        sendFoodToDb(data, file, session)
-    elif "health" in fileLowered :
-        sendHealthMetricToDb(data, file, session)
     else :
-        WriteLog(file, "no matches with a table")
-        MoveToError(file)
+        if "user" in fileLowered :
+            sendUserToDb(data, file ,session)
+        elif "exercise" in fileLowered :
+            sendExerciseToDb(data, file, session)
+        elif "food" in fileLowered :
+            sendFoodToDb(data, file, session)
+        elif "health" in fileLowered :
+            sendHealthMetricToDb(data, file, session)
+        else :
+            WriteLog(file, "no matches with a table")
+            MoveToError(file)
 
 def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
     succesful : bool = True

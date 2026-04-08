@@ -26,8 +26,9 @@ def get_drive_service():
             creds = pickle.load(token)
             return build('drive', 'v3', credentials=creds)
 
-    with open(path, "wb") as f:
-        f.write(base64.b64decode(token_b64))
+    if token_b64 != "":
+        with open(path, "wb") as f:
+            f.write(base64.b64decode(token_b64))
 
     if os.path.exists(path):
         with open(path, 'rb') as token:

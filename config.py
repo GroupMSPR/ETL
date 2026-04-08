@@ -9,9 +9,9 @@ load_dotenv()
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 TMP_PATH = os.path.join(BASE_PATH, "tmp")
 TO_IMPORT_ID = os.getenv("TO_IMPORT_ID")
-ARCHIVE_ID = os.getenv("TO_IMPORT_ID")
-ERROR_ID = os.getenv("TO_IMPORT_ID")
-LOG_ID = os.getenv("TO_IMPORT_ID")
+ARCHIVE_ID = os.getenv("ARCHIVE_ID")
+ERROR_ID = os.getenv("ERROR_ID")
+LOG_ID = os.getenv("LOG_ID")
 
 class Base(DeclarativeBase):
     pass

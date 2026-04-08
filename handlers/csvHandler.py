@@ -1,19 +1,16 @@
 import os
 import pandas as pd
+from config import ERROR_ID, LOG_ID, TMP_PATH
+from utils.driveHelper import move_file
+from utils.fileManager import WriteLog
+from googleapiclient.discovery import Resource
 
-from config import TO_IMPORT_PATH
-from utils.fileManager import WriteLog, MoveToError
-
-def convertCsvToPanda(file: str):
-    file_path = os.path.join(TO_IMPORT_PATH, file)
-
-    separators = [";", ","]
-    for sep in separators:
-        try:
-            df = pd.read_csv(file_path, sep=sep, encoding="utf-8" )   
-            return df
+def convertCsvToPanda(path: str, file, service: Resource):
+    try:
+        df = pd.read_csv(path, sep=None, engine="python", encoding="utf-8" )   
+        return df
     
-        except Exception as ex:
-            WriteLog(file, f"CSV read failed: {ex}")
-            MoveToError(file)
-            return None
+    except Exception as ex:
+        WriteLog(service, LOG_ID, file["name"], f"CSV read failed: {ex}")
+        move_file(service, file["id"], ERROR_ID)
+        return None

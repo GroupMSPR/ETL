@@ -1,20 +1,45 @@
 import os
-from sqlalchemy import NUMERIC, SMALLINT, TEXT, TIMESTAMP, Column, Date, DateTime, ForeignKey, Numeric, SmallInteger, String, Integer, Text, Time
-from sqlalchemy.orm import DeclarativeBase
+import uuid
+from dotenv import load_dotenv
+from sqlalchemy import Uuid, NUMERIC, SMALLINT, TEXT, TIMESTAMP, Column, Date, DateTime, ForeignKey, Numeric, SmallInteger, String, Integer, Text, Time, Table
+from sqlalchemy.orm import DeclarativeBase, relationship
 
-BASE_PATH      = os.path.dirname(os.path.abspath(__file__))
-ARCHIVE_PATH   = os.path.join(BASE_PATH, "Archive")
-ERROR_PATH     = os.path.join(BASE_PATH, "Error")
-LOG_PATH       = os.path.join(BASE_PATH, "Log")
-TO_IMPORT_PATH = os.path.join(BASE_PATH, "ToImport")
+load_dotenv()
+
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+TMP_PATH = os.path.join(BASE_PATH, "tmp")
+TO_IMPORT_ID = os.getenv("TO_IMPORT_ID")
+ARCHIVE_ID = os.getenv("TO_IMPORT_ID")
+ERROR_ID = os.getenv("TO_IMPORT_ID")
+LOG_ID = os.getenv("TO_IMPORT_ID")
 
 class Base(DeclarativeBase):
     pass
 
-class User(Base) :
-    __tablename__           = "user_"
+class Consume(Base):
+    __tablename__ = "consume"
 
-    user_id                 = Column(Integer, primary_key=True, autoincrement=True)
+    consume_id = Column(Uuid, primary_key=True)
+    user_id = Column(ForeignKey("users.id"))
+    food_id = Column(ForeignKey("foods.id"))
+
+    user = relationship("User", back_populates="consumes")
+    food = relationship("Food", back_populates="consumes")
+
+class Practice(Base):
+    __tablename__ = "practice"
+
+    practice_id = Column(Uuid, primary_key=True)
+    user_id = Column(ForeignKey("users.id"))
+    exercise_id = Column(ForeignKey("exercises.id"))
+
+    user = relationship("User", back_populates="practice")
+    exercise = relationship("Exercise", back_populates="practice")
+
+class User(Base) :
+    __tablename__           = "users"
+
+    id                      = Column(Uuid, primary_key=True, default=uuid.uuid4)
     first_name              = Column(String(50))
     last_name               = Column(String(50))
     email                   = Column(String(100), unique=True)
@@ -33,9 +58,9 @@ class User(Base) :
     constraints_             = Column(Text)
 
 class Food(Base) :
-    __tablename__   = "food"
+    __tablename__   = "foods"
 
-    food_id         = Column(Integer, primary_key=True, autoincrement=True)
+    id              = Column(Uuid, primary_key=True, default=uuid.uuid4)
     name            = Column(String(100))
     category        = Column(String(50))
     calories        = Column(NUMERIC(15,2))
@@ -45,13 +70,13 @@ class Food(Base) :
     fiber           = Column(NUMERIC(15,2))
     sugars          = Column(NUMERIC(15,2))
     sodium          = Column(SMALLINT)
-    cholestorol     = Column(SMALLINT)
+    cholesterol     = Column(SMALLINT)
 
 class Exercise(Base) :
 
-    __tablename__       = "exercise"
+    __tablename__       = "exercises"
     
-    exersice_id         = Column(Integer, primary_key=True, autoincrement=True)
+    id                  = Column(Uuid, primary_key=True, default=uuid.uuid4)
     name                = Column(String(50), nullable=False)
     type                = Column(String(50), nullable=False)
     target_muscle       = Column(Text, nullable=False)
@@ -62,10 +87,10 @@ class Exercise(Base) :
     constraints         = Column(Text)
 
 class Health_metric(Base) :
-    __tablename__ = "health_metric"
+    __tablename__ = "health_metrics"
 
-    health_metric_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id          = Column(Integer, ForeignKey("user_.user_id"), nullable=False)
+    id               = Column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id          = Column(Uuid, ForeignKey("users.id"), nullable=False)
     date_            = Column(DateTime, nullable=False)
     start_weight     = Column(Numeric(15, 2), nullable=False)
     current_weight   = Column(Numeric(15, 2), nullable=False)

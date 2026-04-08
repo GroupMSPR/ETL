@@ -3,11 +3,14 @@ import os
 from dotenv import load_dotenv
 
 import pandas
+
+from googleapiclient.discovery import Resource
 from handlers.csvHandler import convertCsvToPanda
-from sqlalchemy import Connection, Engine, create_engine
+from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session
-from config import TO_IMPORT_PATH, Base
-from utils.fileManager import GetFileType
+from config import ERROR_ID, LOG_ID, TMP_PATH, TO_IMPORT_ID, Base
+from utils import driveHelper
+from utils.fileManager import GetFileType, WriteLog
 from handlers.dbHandler import sendToTable
 from handlers.jsonHandler import convertJsonToPanda
 
@@ -28,26 +31,36 @@ def Main() :
         engine: Engine = create_engine(db_url)
         Base.metadata.create_all(engine)
         session: Session = Session(engine)
-        print("connection to db succeded")
 
     except Exception as e:
-        print("connection to db failed")
-        exit()
+        print("DB error:", e)
+        return
+    
+    service: Resource = driveHelper.get_drive_service()
 
-    filesNames : list[str] = os.listdir(TO_IMPORT_PATH)
+    files = driveHelper.list_files(service, TO_IMPORT_ID)
+    
+    for file in files:
 
-    for file in filesNames:
-        data : pandas.DataFrame
-        match GetFileType(os.path.join(TO_IMPORT_PATH, file)):
+        file_id = file["id"]
+        file_name = file["name"]
+
+        driveHelper.download_file(service, file_id, os.path.join(TMP_PATH, file_name))
+        local_path = os.path.join(TMP_PATH, file_name)
+
+        data : pandas.DataFrame = None
+        match GetFileType(local_path):
             case "csv" | "xlsx":
-                data = convertCsvToPanda(file)
+                data = convertCsvToPanda(local_path, file, service)
             case "json":
-                data = convertJsonToPanda(file)
+                data = convertJsonToPanda(local_path, file, service)
             case _:
-                print("FileType Not supported")
+                driveHelper.move_file(service, file_id, ERROR_ID)
+                WriteLog(service, LOG_ID, file_name, "unrecognise dataType")
                 continue
+
         if data is not None:
-            sendToTable(data, file, session)
+            sendToTable(data, file, session, service)
 
     if session:
         session.close()

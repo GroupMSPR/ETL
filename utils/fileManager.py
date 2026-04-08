@@ -1,38 +1,22 @@
 import datetime
 import mimetypes
-import os
-import shutil
-
 import magic
 
-from config import ARCHIVE_PATH, ERROR_PATH, LOG_PATH, TO_IMPORT_PATH
+def GetFileType(fileName: str):
+    mime, _ = mimetypes.guess_type(fileName)
+    fileType: str = magic.from_file(fileName, mime=True)
 
-
-def GetFileType(fileName : str) :
-    mime , _ = mimetypes.guess_type(fileName)
-    fileType : str = magic.from_file(fileName, mime=True)
-    if (fileType == 'text/plain'):
-        split_file_name = fileName.split(".")
-        return split_file_name[len(split_file_name) - 1]
-    else :
+    if fileType == 'text/plain':
+        return fileName.split(".")[-1]
+    else:
         return fileType.split("/")[1]
 
-def MoveToArchive(fileName : str) :
-    try :
-        date : datetime = datetime.datetime.now().strftime("%Y_%d_%w_%H_%M_%S_")
-        shutil.move(src=os.path.join(TO_IMPORT_PATH, fileName), dst=os.path.join(ARCHIVE_PATH, date + fileName))
-    except Exception as ex:
-        print(ex)
 
-def MoveToError(fileName: str) :
-    try :
-        shutil.move(src=os.path.join(TO_IMPORT_PATH, fileName), dst=os.path.join(ERROR_PATH, fileName))
-    except Exception as ex:
-        print(ex)
+def WriteLog(service, log_folder_id, file: str, message: str):
+    from utils.driveHelper import upload_log
 
-def WriteLog(file : str, message : str) :
-                date : datetime = datetime.datetime.now().strftime("%Y_%d_%w_%H_%M_%S")
-                filename = os.path.splitext(file)[0]
-                log_path = os.path.join(LOG_PATH, f"{date}_{filename}.log")
-                with open(log_path, "a") as log:
-                      log.write(message + "\n")
+    date = datetime.datetime.now().strftime("%Y_%d_%w_%H_%M_%S")
+    filename = file.split(".")[0]
+    log_name = f"{date}_{filename}.log"
+
+    upload_log(service, log_folder_id, log_name, message)

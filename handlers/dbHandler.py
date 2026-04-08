@@ -1,55 +1,58 @@
+import datetime
 from typing import Any, List
 
 import pandas
 
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.schema import Column
-from config import Consume, Exercise, Food, Health_metric, Practice, User
-from utils.fileManager import MoveToArchive, MoveToError, WriteLog
+from config import ARCHIVE_ID, ERROR_ID, LOG_ID, Consume, Exercise, Food, Health_metric, Practice, User
+from utils.driveHelper import move_file
+from utils.fileManager import WriteLog
+from googleapiclient.discovery import Resource
 from utils.dataframeFormatter import formatDataFrame
 
-def sendToTable(data: pandas.DataFrame, file: str, session: Session):
+def sendToTable(data: pandas.DataFrame, file, session: Session, service: Resource):
 
-    fileTableNumber: str = file[0]
+    fileTableNumber: str = file["name"][0]
 
-    fileLowered = file.lower()
+    fileLowered = file["name"].lower()
 
     if fileTableNumber.isnumeric():
         if fileTableNumber == "1" :
-            sendUserToDb(data, file ,session)
+            sendUserToDb(data, file ,session, service)
         elif fileTableNumber == "2" :
-            sendExerciseToDb(data, file, session)
+            sendExerciseToDb(data, file, session, service)
         elif fileTableNumber == "3" :
-            sendFoodToDb(data, file, session)
+            sendFoodToDb(data, file, session, service)
         elif fileTableNumber == "4" :
-            sendHealthMetricToDb(data, file, session)
+            sendHealthMetricToDb(data, file, session, service)
         elif fileTableNumber == "5" :
-            sendUserFoodRelationToDb(data, file, session)
+            sendUserFoodRelationToDb(data, file, session, service)
         elif fileTableNumber == "6" :
-            sendUserExerciseRelationToDb(data, file, session)
+            sendUserExerciseRelationToDb(data, file, session, service)
         else :
-            WriteLog(file, "no matches with a table, index out of range 6")
-            MoveToError(file)
+            WriteLog(service, LOG_ID, file["name"], "no matches with a table, index out of range 6")
+            move_file(service, file["id"], ERROR_ID)
             return
     else :
         if "user" in fileLowered :
-            sendUserToDb(data, file ,session)
+            sendUserToDb(data, file ,session, service)
         elif "exercise" in fileLowered :
-            sendExerciseToDb(data, file, session)
+            sendExerciseToDb(data, file, session, service)
         elif "food" in fileLowered :
-            sendFoodToDb(data, file, session)
+            sendFoodToDb(data, file, session, service)
         elif "health" in fileLowered :
-            sendHealthMetricToDb(data, file, session)
+            sendHealthMetricToDb(data, file, session, service)
         elif "consume" in fileLowered :
-            sendUserFoodRelationToDb(data, file, session)
+            sendUserFoodRelationToDb(data, file, session, service)
         elif "practice" in fileLowered :
-            sendUserExerciseRelationToDb(data, file, session)
+            sendUserExerciseRelationToDb(data, file, session, service)
         else :
-            WriteLog(file, "no matches with a table, no index or name found")
-            MoveToError(file)
+            WriteLog(service, LOG_ID, file["name"], "no matches with a table, no index or name found")
+            move_file(service, file["id"], ERROR_ID)
             return
             
-def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
+def sendUserToDb(data: pandas.DataFrame, file, session: Session, service: Resource):
     succesful : bool = True
 
     errorMessage = ""
@@ -73,8 +76,8 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
 
     data, errorMessage = formatDataFrame(data, field)
     if errorMessage != "":
-        WriteLog(file, errorMessage)
-        MoveToError(file)
+        WriteLog(service, LOG_ID, file["name"], errorMessage)
+        move_file(service, file["id"], ERROR_ID)
         return
 
     data = data.fillna(0)
@@ -94,35 +97,35 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 user.email = row.get("email")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain email attribute or email is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain email attribute or email is misspelled or invalid.")
                 break
 
             if "password" in row and row.get("password") != 0:
                 user.password = row.get("password")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain password attribute or password is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain password attribute or password is misspelled or invalid.")
                 break
             
             if "first_name" in row and row.get("first_name") != 0:
                 user.first_name = row.get("first_name")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain first_name attribute or first_name is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain first_name attribute or first_name is misspelled or invalid.")
                 break
 
             if "last_name" in row and row.get("last_name") != 0:
                 user.last_name = row.get("last_name")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain last_name attribute or last_name is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain last_name attribute or last_name is misspelled or invalid.")
                 break 
 
             if "birthdate" in row and row.get("birthdate") != 0:
                 user.birthdate = row.get("birthdate")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain birthdate attribute or birthdate is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain birthdate attribute or birthdate is misspelled or invalid.")
                 break
 
             gender = row.get("gender")
@@ -130,21 +133,21 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 user.gender = gender.lower()
             else :
                 succesful = False
-                WriteLog(file, "file does not contain gender attribute or gender is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain gender attribute or gender is misspelled or invalid.")
                 break
 
             if "weight" in row and row.get("weight") != 0:
                 user.weight = row.get("weight")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain weight attribute or weight is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain weight attribute or weight is misspelled or invalid.")
                 break
             
             if "height" in row and row.get("height") != 0:
                 user.height = row.get("height")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain height attribute or height is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain height attribute or height is misspelled or invalid.")
                 break
 
             user.bmi = round(user.weight / (user.height**2), 2) 
@@ -153,7 +156,7 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 user.body_fat_pct = row.get("body_fat_pct")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain body_fat_pct attribute or body_fat_pct is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain body_fat_pct attribute or body_fat_pct is misspelled or invalid.")
                 break
 
             constraints = row.get("constraints") 
@@ -169,14 +172,14 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 user.physical_activity_level = physicalActivityLevel.lower()
             else :
                 succesful = False
-                WriteLog(file, "file does not contain physical_activity_level attribute or physical_activity_level is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain physical_activity_level attribute or physical_activity_level is misspelled or invalid.")
                 break
 
             if "daily_caloric_intake" in row and row.get("daily_caloric_intake") != 0:
                 user.daily_caloric_intake = row.get("daily_caloric_intake")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain daily_caloric_intake attribute or daily_caloric_intake is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain daily_caloric_intake attribute or daily_caloric_intake is misspelled or invalid.")
                 break
 
             if "goal" in row and row.get("goal") != 0:
@@ -189,7 +192,7 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
                 user.subscription = subscription.lower()
             else :
                 succesful = False
-                WriteLog(file, "file does not contain subscription attribute or subscription is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain subscription attribute or subscription is misspelled or invalid.")
                 break
             
             if row.get("date_subscription") != 0:
@@ -203,14 +206,14 @@ def sendUserToDb(data: pandas.DataFrame, file: str, session: Session):
     except Exception as ex:
         succesful = False
         session.rollback()
-        WriteLog(file, str(ex))
+        WriteLog(service, LOG_ID, file["name"], str(ex))
     
     if (succesful):
-        MoveToArchive(file)
+        move_file(service, file["id"], ARCHIVE_ID, addDateToFile(file["name"]))
     else :
-        MoveToError(file)
+        move_file(service, file["id"], ERROR_ID)
 
-def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
+def sendExerciseToDb(data: pandas.DataFrame, file, session: Session, service: Resource):
     succesful : bool = True
 
     errorMessage = ""
@@ -227,8 +230,8 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
 
     data, errorMessage = formatDataFrame(data, field)
     if errorMessage != "":
-        WriteLog(file, errorMessage)
-        MoveToError(file)
+        WriteLog(service, LOG_ID, file["name"], errorMessage)
+        move_file(service, file["id"], ERROR_ID)
         return
         
     data = data.fillna(0)
@@ -241,7 +244,7 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
                 exercise.name = row.get("name")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain name attribute or name is misspelled or invalid.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain name attribute or name is misspelled or invalid.")
                 break
 
             exercise.difficulty_level   = row.get("difficulty_level") or "Non renseigné"
@@ -254,7 +257,7 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
                 exercise.target_muscle  = row.get("target_muscle") or "Non renseigné"
             else :
                 succesful = False
-                WriteLog(file, "file does not contain target_muscle attribute or target_muscle is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain target_muscle attribute or target_muscle is misspelled.")
                 break
 
             secondaryMuscle = row.get("secondary_muscle") or "No Secondary Muscle"
@@ -295,13 +298,13 @@ def sendExerciseToDb(data: pandas.DataFrame, file: str, session: Session):
     except Exception as ex:
         succesful = False
         session.rollback()
-        WriteLog(file, str(ex))
+        WriteLog(service, LOG_ID, file["name"], str(ex))
     if (succesful):
-        MoveToArchive(file)
+        move_file(service, file["id"], ARCHIVE_ID, addDateToFile(file["name"]))
     else :
-        MoveToError(file)
+        move_file(service, file["id"], ERROR_ID)
 
-def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
+def sendFoodToDb(data: pandas.DataFrame, file, session: Session, service: Resource) :
     succesful : bool = True
 
     errorMessage = ""
@@ -320,8 +323,8 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
 
     data, errorMessage = formatDataFrame(data, field)
     if errorMessage != "":
-        WriteLog(file, errorMessage)
-        MoveToError(file)
+        WriteLog(service, LOG_ID, file["name"], errorMessage)
+        move_file(service, file["id"], ERROR_ID)
         return
 
     data = data.fillna(0)
@@ -334,7 +337,7 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
                 food.name = row.get("name")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain name attribute or name is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain name attribute or name is misspelled.")
                 break
 
             food.category = row.get("category", "Non renseigné") or "Non renseigné"
@@ -347,7 +350,7 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
 
             sodium = row.get("sodium", 0)  
             if sodium > 32767:
-                WriteLog(file, food.name + "sodium is above smallint limit")
+                WriteLog(service, LOG_ID, file["name"], food.name + "sodium is above smallint limit")
                 succesful = False
                 break
             else : 
@@ -355,7 +358,7 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
 
             cholesterol = row.get("cholesterol", 0) 
             if cholesterol > 32767:
-                WriteLog(file, food.name + " cholesterol is above smallint limit")
+                WriteLog(service, LOG_ID, file["name"], food.name + " cholesterol is above smallint limit")
                 succesful = False
                 break
             else :
@@ -367,15 +370,15 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
     except Exception as ex:
         succesful = False
         session.rollback()
-        WriteLog(file, str(ex))
+        WriteLog(service, LOG_ID, file["name"], str(ex))
         
     
     if (succesful):
-        MoveToArchive(file)
+        move_file(service, file["id"], ARCHIVE_ID, addDateToFile(file["name"]))
     else :
-        MoveToError(file)
+        move_file(service, file["id"], ERROR_ID)
 
-def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
+def sendHealthMetricToDb(data: pandas.DataFrame, file, session: Session, service: Resource):
     succesful : bool = True
 
     errorMessage = ""
@@ -396,8 +399,8 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
 
     data, errorMessage = formatDataFrame(data, field)
     if errorMessage != "":
-        WriteLog(file, errorMessage)
-        MoveToError(file)
+        WriteLog(service, LOG_ID, file["name"], errorMessage)
+        move_file(service, file["id"], ERROR_ID)
         return
 
     data = data.fillna(0)
@@ -421,88 +424,88 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
                     healthMetric.user_id = user_map[email]
                 else :
                     succesful = False
-                    WriteLog(file, "no user with that email")
+                    WriteLog(service, LOG_ID, file["name"], "no user with that email")
                     break 
             else :
                 succesful = False
-                WriteLog(file, "file does not contain user_email attribute or user_email is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain user_email attribute or user_email is misspelled.")
                 break
 
             if "date" in row and row.get("date") != 0:
                 healthMetric.date_ = row.get("date")
             else :
                 succesful = False
-                WriteLog(file, "file does not contain date attribute or date is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain date attribute or date is misspelled.")
                 break
 
             if "start_weight" in row and row.get("start_weight") != 0:
                 healthMetric.start_weight = row.get("start_weight")
             else:
                 succesful = False
-                WriteLog(file, "file does not contain start_weight attribute or start_weight is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain start_weight attribute or start_weight is misspelled.")
                 break
 
             if "current_weight" in row and row.get("current_weight") != 0:
                 healthMetric.current_weight = row.get("current_weight")
             else:
                 succesful = False
-                WriteLog(file, "file does not contain current_weight attribute or current_weight is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain current_weight attribute or current_weight is misspelled.")
                 break
 
             if "avg_bpm" in row and row.get("avg_bpm") != 0:
                 healthMetric.avg_bpm = row.get("avg_bpm")
             else:
                 succesful = False
-                WriteLog(file, "file does not contain avg_bpm attribute or avg_bpm is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain avg_bpm attribute or avg_bpm is misspelled.")
                 break
 
             if "max_bpm" in row and row.get("max_bpm") != 0:
                 healthMetric.max_bpm = row.get("max_bpm")
             else:
                 succesful = False
-                WriteLog(file, "file does not contain max_bpm attribute or max_bpm is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain max_bpm attribute or max_bpm is misspelled.")
                 break
 
             if "resting_bpm" in row and row.get("resting_bpm") != 0:
                 healthMetric.resting_bpm = row.get("resting_bpm")
             else:
                 succesful = False
-                WriteLog(file, "file does not contain resting_bpm attribute or resting_bpm is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain resting_bpm attribute or resting_bpm is misspelled.")
                 break
 
             if "steps_count" in row and row.get("steps_count") != 0:
                 healthMetric.steps_count = row.get("steps_count")
             else:
                 succesful = False
-                WriteLog(file, "file does not contain steps_count attribute or steps_count is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain steps_count attribute or steps_count is misspelled.")
                 break
 
             if "sleep_time" in row and row.get("sleep_time") != 0:
                 healthMetric.sleep_time = row.get("sleep_time")
             else:
                 succesful = False
-                WriteLog(file, "file does not contain sleep_time attribute or sleep_time is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain sleep_time attribute or sleep_time is misspelled.")
                 break
 
             if "calories_burned" in row and row.get("calories_burned") != 0:
                 healthMetric.calories_burned = row.get("calories_burned")
             else:
                 succesful = False
-                WriteLog(file, "file does not contain calories_burned attribute or calories_burned is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain calories_burned attribute or calories_burned is misspelled.")
                 break
 
             if "active_minute" in row and row.get("active_minute") != 0:
                 healthMetric.active_minute = row.get("active_minute")
             else:
                 succesful = False
-                WriteLog(file, "file does not contain active_minute attribute or active_minute is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain active_minute attribute or active_minute is misspelled.")
                 break
 
             if "workout_type" in row and row.get("workout_type") != 0:
                 healthMetric.workout_type = row.get("workout_type")
             else:
                 succesful = False
-                WriteLog(file, "file does not contain workout_type attribute or workout_type is misspelled.")
+                WriteLog(service, LOG_ID, file["name"], "file does not contain workout_type attribute or workout_type is misspelled.")
                 break
 
             session.add(healthMetric)
@@ -511,14 +514,14 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file: str, session: Session):
     except Exception as ex:
         succesful = False
         session.rollback()
-        WriteLog(file, str(ex))
+        WriteLog(service, LOG_ID, file["name"], str(ex))
     
     if (succesful):
-        MoveToArchive(file)
+        move_file(service, file["id"], ARCHIVE_ID, addDateToFile(file["name"]))
     else :
-        MoveToError(file)
+        move_file(service, file["id"], ERROR_ID)
 
-def sendUserFoodRelationToDb(data: pandas.DataFrame, file: str, session: Session):
+def sendUserFoodRelationToDb(data: pandas.DataFrame, file, session: Session, service: Resource):
     succesful : bool = True
 
     errorMessage = ""
@@ -529,8 +532,8 @@ def sendUserFoodRelationToDb(data: pandas.DataFrame, file: str, session: Session
 
     data, errorMessage = formatDataFrame(data, field)
     if errorMessage != "":
-        WriteLog(file, errorMessage)
-        MoveToError(file)
+        WriteLog(service, LOG_ID, file["name"], errorMessage)
+        move_file(service, file["id"], ERROR_ID)
         return
 
     try: 
@@ -557,13 +560,13 @@ def sendUserFoodRelationToDb(data: pandas.DataFrame, file: str, session: Session
     except Exception as ex:
         succesful = False
         session.rollback()
-        WriteLog(file, str(ex))
+        WriteLog(service, LOG_ID, file["name"], str(ex))
     if (succesful):
-        MoveToArchive(file)
+        move_file(service, file["id"], ARCHIVE_ID, addDateToFile(file["name"]))
     else :
-        MoveToError(file)
+        move_file(service, file["id"], ERROR_ID)
 
-def sendUserExerciseRelationToDb(data: pandas.DataFrame, file: str, session: Session):
+def sendUserExerciseRelationToDb(data: pandas.DataFrame, file, session: Session, service: Resource):
     succesful : bool = True
 
     errorMessage = ""
@@ -574,8 +577,8 @@ def sendUserExerciseRelationToDb(data: pandas.DataFrame, file: str, session: Ses
 
     data, errorMessage = formatDataFrame(data, field)
     if errorMessage != "":
-        WriteLog(file, errorMessage)
-        MoveToError(file)
+        WriteLog(service, LOG_ID, file["name"], errorMessage)
+        move_file(service, file["id"], ERROR_ID)
         return
 
     try: 
@@ -602,8 +605,12 @@ def sendUserExerciseRelationToDb(data: pandas.DataFrame, file: str, session: Ses
     except Exception as ex:
         succesful = False
         session.rollback()
-        WriteLog(file, str(ex))
+        WriteLog(service, LOG_ID, file["name"], str(ex))
     if (succesful):
-        MoveToArchive(file)
+        move_file(service, file["id"], ARCHIVE_ID, addDateToFile(file["name"]))
     else :
-        MoveToError(file)
+        move_file(service, file["id"], ERROR_ID)
+
+def addDateToFile(file_name: str):
+    timestamp = datetime.datetime.now().strftime("%Y_%d_%w_%H_%M_%S")
+    return f"{timestamp}_{file_name}"

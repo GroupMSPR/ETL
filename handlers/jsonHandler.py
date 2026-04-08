@@ -2,14 +2,14 @@ import json
 import os
 
 import pandas
-from utils.fileManager import MoveToError, WriteLog
-from config import TO_IMPORT_PATH
+from googleapiclient.discovery import Resource
+from utils.driveHelper import move_file
+from utils.fileManager import  WriteLog
+from config import ERROR_ID, LOG_ID, TMP_PATH
 
-def convertJsonToPanda(file):
-    file_path = os.path.join(TO_IMPORT_PATH, file)
-
+def convertJsonToPanda(path: str, file, service: Resource):
     try:
-        with open(file_path, "r") as f:
+        with open(path, "r") as f:
             data = json.load(f)
 
         if isinstance(data, dict):
@@ -17,13 +17,13 @@ def convertJsonToPanda(file):
         elif isinstance(data, list):
             df = pandas.DataFrame(data)
         else:
-            WriteLog(file, "fileType not understood. If object, it must contain a 'data' list.")
-            MoveToError(file)
+            WriteLog(service, LOG_ID, file["name"], "fileType not understood. If object, it must contain a 'data' list.")
+            move_file(service, file["id"], ERROR_ID)
             return None
 
         return df
 
     except Exception as ex:
-        WriteLog(file, str(ex))
-        MoveToError(file)
+        WriteLog(service, LOG_ID, file["name"], str(ex))
+        move_file(service, file["id"], ERROR_ID)
         return None

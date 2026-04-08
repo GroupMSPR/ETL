@@ -1,13 +1,17 @@
 import os
 import uuid
+from dotenv import load_dotenv
 from sqlalchemy import Uuid, NUMERIC, SMALLINT, TEXT, TIMESTAMP, Column, Date, DateTime, ForeignKey, Numeric, SmallInteger, String, Integer, Text, Time, Table
 from sqlalchemy.orm import DeclarativeBase, relationship
 
-BASE_PATH      = os.path.dirname(os.path.abspath(__file__))
-ARCHIVE_PATH   = os.path.join(BASE_PATH, "Archive")
-ERROR_PATH     = os.path.join(BASE_PATH, "Error")
-LOG_PATH       = os.path.join(BASE_PATH, "Log")
-TO_IMPORT_PATH = os.path.join(BASE_PATH, "ToImport")
+load_dotenv()
+
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+TMP_PATH = os.path.join(BASE_PATH, "tmp")
+TO_IMPORT_ID = os.getenv("TO_IMPORT_ID")
+ARCHIVE_ID = os.getenv("TO_IMPORT_ID")
+ERROR_ID = os.getenv("TO_IMPORT_ID")
+LOG_ID = os.getenv("TO_IMPORT_ID")
 
 class Base(DeclarativeBase):
     pass

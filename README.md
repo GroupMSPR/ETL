@@ -20,6 +20,12 @@ Cette version du pipeline ETL permet l’import et le traitement automatisé des
      ├─ ToImport/
      └─ Error/
 
+4. **Mettre en place le fichier `.env`**
+   - Copier `.env.example` en `.env`
+   - Remplir les variables avec vos informations (voir .env.exemple)
+
+> Optionnel : vous pouvez convertir le token en Base64 et le mettre dans `GOOGLE_TOKEN_PICKLE`.
+
 ---
 
 ## 🔑 Configuration Google Drive
@@ -34,7 +40,7 @@ Cette version du pipeline ETL permet l’import et le traitement automatisé des
 ## ⚙️ Initialisation du service Google Drive
 
 1. Décommenter le code dans la fonction `get_drive_service` de `driveHelper.py`
-2. Lancer le projet. Une fenêtre Google s’ouvrira pour connecter votre compte.
+2. Lancer le projet. Une fenêtre Google s’ouvrira pour connecter votre compte
    - Cela générera automatiquement un fichier `token.pickle` pour authentifier les futures connexions.
 3. Vous pouvez laisser le code décommenté ou le remettre commenté selon que vous souhaitez réautoriser l’accès si le token expire.
 

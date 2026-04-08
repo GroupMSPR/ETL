@@ -34,18 +34,22 @@ def get_drive_service():
             creds = pickle.load(token)
             return build('drive', 'v3', credentials=creds)
 
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
 
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
+    ## if pickle expire uncoment rerun reconvert the new pickle to base64 and readd it to the .env
 
-    return build('drive', 'v3', credentials=creds)
+    # if not creds or not creds.valid:
+    #     if creds and creds.expired and creds.refresh_token:
+    #         creds.refresh(Request())
+    #     else:
+    #         flow = InstalledAppFlow.from_client_secrets_file(
+    #             'credentials.json', SCOPES)
+    #         creds = flow.run_local_server(port=0)
+
+    #     with open('token.pickle', 'wb') as token:
+    #         pickle.dump(creds, token)
+
+    if not creds or not creds.valid and not creds.refresh_token:
+        raise RuntimeError("Invalid credentials and no refresh token — re-authenticate manually.")
 
 def list_files(service, folder_id):
     results = service.files().list(

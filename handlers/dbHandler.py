@@ -315,7 +315,7 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
         "fiber",
         "sugars",
         "sodium",
-        "cholestorol"
+        "cholesterol"
     ]
 
     data, errorMessage = formatDataFrame(data, field)
@@ -353,13 +353,13 @@ def sendFoodToDb(data: pandas.DataFrame, file: str, session: Session) :
             else : 
                 food.sodium = sodium
 
-            cholestorol = row.get("cholestorol", 0) 
-            if cholestorol > 32767:
+            cholesterol = row.get("cholesterol", 0) 
+            if cholesterol > 32767:
                 WriteLog(file, food.name + " cholesterol is above smallint limit")
                 succesful = False
                 break
             else :
-                food.cholestorol = cholestorol
+                food.cholesterol = cholesterol
 
             session.add(food)
         if succesful:

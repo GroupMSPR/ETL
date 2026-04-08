@@ -1,5 +1,6 @@
 import os
-from sqlalchemy import NUMERIC, SMALLINT, TEXT, TIMESTAMP, Column, Date, DateTime, ForeignKey, Numeric, SmallInteger, String, Integer, Text, Time, Table
+import uuid
+from sqlalchemy import Uuid, NUMERIC, SMALLINT, TEXT, TIMESTAMP, Column, Date, DateTime, ForeignKey, Numeric, SmallInteger, String, Integer, Text, Time, Table
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 BASE_PATH      = os.path.dirname(os.path.abspath(__file__))
@@ -14,9 +15,9 @@ class Base(DeclarativeBase):
 class Consume(Base):
     __tablename__ = "consume"
 
-    consume_id = Column(Integer, primary_key=True)
-    user_id = Column(ForeignKey("user_.user_id"))
-    food_id = Column(ForeignKey("food.food_id"))
+    consume_id = Column(Uuid, primary_key=True)
+    user_id = Column(ForeignKey("users.id"))
+    food_id = Column(ForeignKey("foods.id"))
 
     user = relationship("User", back_populates="consumes")
     food = relationship("Food", back_populates="consumes")
@@ -24,17 +25,17 @@ class Consume(Base):
 class Practice(Base):
     __tablename__ = "practice"
 
-    practice_id = Column(Integer, primary_key=True)
-    user_id = Column(ForeignKey("user_.user_id"))
-    exercise_id = Column(ForeignKey("exercise.exercise_id"))
+    practice_id = Column(Uuid, primary_key=True)
+    user_id = Column(ForeignKey("users.id"))
+    exercise_id = Column(ForeignKey("exercises.id"))
 
     user = relationship("User", back_populates="practice")
     exercise = relationship("Exercise", back_populates="practice")
 
 class User(Base) :
-    __tablename__           = "user_"
+    __tablename__           = "users"
 
-    user_id                 = Column(Integer, primary_key=True, autoincrement=True)
+    id                      = Column(Uuid, primary_key=True, default=uuid.uuid4)
     first_name              = Column(String(50))
     last_name               = Column(String(50))
     email                   = Column(String(100), unique=True)
@@ -56,9 +57,9 @@ class User(Base) :
     practice = relationship("Practice", back_populates="user")
 
 class Food(Base) :
-    __tablename__   = "food"
+    __tablename__   = "foods"
 
-    food_id         = Column(Integer, primary_key=True, autoincrement=True)
+    id              = Column(Uuid, primary_key=True, default=uuid.uuid4)
     name            = Column(String(100))
     category        = Column(String(50))
     calories        = Column(NUMERIC(15,2))
@@ -68,15 +69,15 @@ class Food(Base) :
     fiber           = Column(NUMERIC(15,2))
     sugars          = Column(NUMERIC(15,2))
     sodium          = Column(SMALLINT)
-    cholestorol     = Column(SMALLINT)
+    cholesterol     = Column(SMALLINT)
 
     consumes = relationship("Consume", back_populates="food")
 
 class Exercise(Base) :
 
-    __tablename__       = "exercise"
+    __tablename__       = "exercises"
     
-    exercise_id         = Column(Integer, primary_key=True, autoincrement=True)
+    id                  = Column(Uuid, primary_key=True, default=uuid.uuid4)
     name                = Column(String(50), nullable=False)
     type                = Column(String(50), nullable=False)
     target_muscle       = Column(Text, nullable=False)
@@ -89,10 +90,10 @@ class Exercise(Base) :
     practice = relationship("Practice", back_populates="exercise")
 
 class Health_metric(Base) :
-    __tablename__ = "health_metric"
+    __tablename__ = "health_metrics"
 
-    health_metric_id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id          = Column(Integer, ForeignKey("user_.user_id"), nullable=False)
+    id               = Column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id          = Column(Uuid, ForeignKey("users.id"), nullable=False)
     date_            = Column(DateTime, nullable=False)
     start_weight     = Column(Numeric(15, 2), nullable=False)
     current_weight   = Column(Numeric(15, 2), nullable=False)

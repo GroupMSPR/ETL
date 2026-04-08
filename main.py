@@ -1,5 +1,7 @@
 import os
 
+from dotenv import load_dotenv
+
 import pandas
 from handlers.csvHandler import convertCsvToPanda
 from sqlalchemy import Connection, Engine, create_engine
@@ -9,10 +11,21 @@ from utils.fileManager import GetFileType
 from handlers.dbHandler import sendToTable
 from handlers.jsonHandler import convertJsonToPanda
 
-
 def Main() :
+
+    load_dotenv()
+
     try:
-        engine: Engine = create_engine('')
+        db_url = os.getenv("DATABASE_URL")
+
+        if not db_url:
+            print("Erreur : DATABASE_URL est vide ou non définie.")
+            return
+
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+        engine: Engine = create_engine(db_url)
         Base.metadata.create_all(engine)
         session: Session = Session(engine)
         print("connection to db succeded")
@@ -22,7 +35,6 @@ def Main() :
         exit()
 
     filesNames : list[str] = os.listdir(TO_IMPORT_PATH)
-    filesNames = sorted(filesNames) # if there is more then 9 table we'll have to redo it to sort based on value
 
     for file in filesNames:
         data : pandas.DataFrame

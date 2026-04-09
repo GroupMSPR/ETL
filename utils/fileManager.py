@@ -1,15 +1,9 @@
 import datetime
-import mimetypes
-import magic
+
 
 def GetFileType(fileName: str):
-    mime, _ = mimetypes.guess_type(fileName)
-    fileType: str = magic.from_file(fileName, mime=True)
+    return fileName.split(".")[-1]
 
-    if fileType == 'text/plain':
-        return fileName.split(".")[-1]
-    else:
-        return fileType.split("/")[1]
 
 
 def WriteLog(service, log_folder_id, file: str, message: str):

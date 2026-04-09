@@ -218,7 +218,7 @@ def sendExerciseToDb(data: pandas.DataFrame, file, session: Session, service: Re
 
     errorMessage = ""
     field = [
-        "name_exercise",
+        "name",
         "difficulty_level",
         "type",
         "target_muscle",
@@ -240,8 +240,8 @@ def sendExerciseToDb(data: pandas.DataFrame, file, session: Session, service: Re
         for _,row in data.iterrows():
             exercise: Exercise = Exercise()
 
-            if "name_exercise" in row and row.get("name_exercise") != 0:
-                exercise.name = row.get("name_exercise")
+            if "name" in row and row.get("name") != 0:
+                exercise.name = row.get("name")
             else :
                 succesful = False
                 WriteLog(service, LOG_ID, file["name"], "file does not contain name attribute or name is misspelled or invalid.")
@@ -309,7 +309,7 @@ def sendFoodToDb(data: pandas.DataFrame, file, session: Session, service: Resour
 
     errorMessage = ""
     field = [
-        "name_food",
+        "name",
         "category",
         "calories",
         "protein",
@@ -333,8 +333,8 @@ def sendFoodToDb(data: pandas.DataFrame, file, session: Session, service: Resour
 
             food: Food = Food()
 
-            if "name_food" in row and row.get("name_food") != 0:
-                food.name = row.get("name_food")
+            if "name" in row and row.get("name") != 0:
+                food.name = row.get("name")
             else :
                 succesful = False
                 WriteLog(service, LOG_ID, file["name"], "file does not contain name attribute or name is misspelled.")

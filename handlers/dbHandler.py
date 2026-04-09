@@ -407,12 +407,12 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file, session: Session, service
     if "date" in data:
         data["date"] = pandas.to_datetime(data["date"])
 
-    users = session.query(User.user_id, User.email).all()
+    users = session.query(User.id, User.email).all()
 
     user_map = {}
 
     for user in users:
-        user_map[user.email] = user.user_id
+        user_map[user.email] = user.id
 
     try: 
         for _,row in data.iterrows():
@@ -549,8 +549,8 @@ def sendUserFoodRelationToDb(data: pandas.DataFrame, file, session: Session, ser
         for _,row in data.iterrows():
             consume : Consume = Consume()
 
-            consume.food_id = foodMap.get(row.get("food_name")).food_id
-            consume.user_id = userMap.get(row.get("email")).user_id
+            consume.food_id = foodMap.get(row.get("food_name"))
+            consume.user_id = userMap.get(row.get("email"))
 
             session.add(consume)
         

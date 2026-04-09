@@ -19,7 +19,7 @@ class Base(DeclarativeBase):
 class Consume(Base):
     __tablename__ = "consume"
 
-    consume_id = Column(Uuid, primary_key=True)
+    consume_id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id = Column(ForeignKey("users.id"))
     food_id = Column(ForeignKey("foods.id"))
 
@@ -29,7 +29,7 @@ class Consume(Base):
 class Practice(Base):
     __tablename__ = "practice"
 
-    practice_id = Column(Uuid, primary_key=True)
+    practice_id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id = Column(ForeignKey("users.id"))
     exercise_id = Column(ForeignKey("exercises.id"))
 

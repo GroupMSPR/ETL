@@ -35,6 +35,7 @@ def Main() :
         exit()
 
     filesNames : list[str] = os.listdir(TO_IMPORT_PATH)
+    filesNames = sorted(filesNames) # if there is more then 9 table we'll have to redo it to sort based on value
 
     for file in filesNames:
         data : pandas.DataFrame

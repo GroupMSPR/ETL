@@ -59,8 +59,9 @@ def Main() :
                 driveHelper.move_file(service, file_id, ERROR_ID)
                 WriteLog(service, LOG_ID, file_name, "unrecognise dataType")
                 continue
-
+        
         if data is not None:
+            data = data.drop_duplicates()
             sendToTable(data, file, session, service)
 
     if session:

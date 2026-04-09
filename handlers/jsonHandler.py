@@ -9,7 +9,7 @@ from config import ERROR_ID, LOG_ID, TMP_PATH
 
 def convertJsonToPanda(path: str, file, service: Resource):
     try:
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         if isinstance(data, dict):

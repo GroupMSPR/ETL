@@ -64,6 +64,11 @@ def Main() :
                 continue
         
         if data is not None:
+            cols_with_lists = [col for col in data.columns if data[col].apply(lambda x: isinstance(x, list)).any()]
+    
+            for col in cols_with_lists:
+                data[col] = data[col].apply(lambda x: str(x) if isinstance(x, list) else x)
+
             data = data.drop_duplicates()
             sendToTable(data, file, session, service)
 

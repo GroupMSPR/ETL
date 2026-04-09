@@ -432,7 +432,7 @@ def sendHealthMetricToDb(data: pandas.DataFrame, file, session: Session, service
                 break
 
             if "date" in row and row.get("date") != 0:
-                healthMetric.date_ = row.get("date")
+                healthMetric.date = row.get("date")
             else :
                 succesful = False
                 WriteLog(service, LOG_ID, file["name"], "file does not contain date attribute or date is misspelled.")

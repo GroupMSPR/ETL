@@ -98,7 +98,7 @@ class Health_metric(Base) :
 
     id               = Column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id          = Column(Uuid, ForeignKey("users.id"), nullable=False)
-    date_            = Column(DateTime, nullable=False)
+    date             = Column(DateTime, nullable=False)
     start_weight     = Column(Numeric(15, 2), nullable=False)
     current_weight   = Column(Numeric(15, 2), nullable=False)
     avg_bpm          = Column(Numeric(15, 2), nullable=False)

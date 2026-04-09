@@ -2,9 +2,10 @@ version: '3.8'
 
 services:
   etl:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: healthai_etl
-    # Permet au conteneur de trouver la BDD de Laravel sur ta machine
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -14,7 +15,6 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Mot de passe par défaut pour te connecter à l'interface
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
     extra_hosts:

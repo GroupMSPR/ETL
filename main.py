@@ -39,6 +39,7 @@ def Main() :
     service: Resource = driveHelper.get_drive_service()
 
     files = driveHelper.list_files(service, TO_IMPORT_ID)
+    files = sorted(files, key=lambda x: (not x["name"][0].isdigit(), x["name"].lower())) # if there is more then 9 table we'll have to redo it to sort based on value
     
     for file in files:
 

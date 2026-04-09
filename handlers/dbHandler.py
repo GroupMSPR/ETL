@@ -549,8 +549,8 @@ def sendUserFoodRelationToDb(data: pandas.DataFrame, file, session: Session, ser
         for _,row in data.iterrows():
             consume : Consume = Consume()
 
-            consume.food_id = foodMap.get(row.get("food_name"))
-            consume.user_id = userMap.get(row.get("email"))
+            consume.food = foodMap.get(row.get("food_name"))
+            consume.user = userMap.get(row.get("email"))
 
             session.add(consume)
         

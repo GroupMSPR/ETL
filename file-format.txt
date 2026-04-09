@@ -7,21 +7,21 @@ si le fichier commence par un chiffre, il sera considéré comme déterminant le
 type 1
 User 
     field = [
-        "email",
-        "password",
+        "email", 
+        "password",  n'encode pas, les donné doivent être encoder de base
         "first_name",
         "last_name",
         "birthdate",
-        "gender",
+        "gender",   doit être male, female ou other
         "weight",
         "height",
         "body_fat_pct",
         "constraints",
-        "physical_activity_level",
+        "physical_activity_level",  doit être sedentary, moderate ou active
         "daily_caloric_intake",
         "goal",
         "subscription",
-        "date_subscription"
+        "date_subscription"         doit être freemium, premium ou premium+
     ]
 
 type 2
@@ -47,8 +47,8 @@ food
         "fat",
         "fiber",
         "sugars",
-        "sodium",
-        "cholesterol"
+        "sodium",       doit être inferieur à 32767
+        "cholesterol"   doit être inferieur à 32767
     ]
 
 type 4
@@ -71,13 +71,13 @@ health metric
 type 5
 user_food relation 
     field = [
-        "email",
-        "food_name"
+        "email",        email d'un utilisateur existant dans la base de donné 
+        "food_name"     nom de nourriture existant dans la base de donné 
     ]
 
 type 6
 User_Exercise Relation
     field = [
-        "email",
-        "exercise_name"
+        "email",        email d'un utilisateur existant dans la base de donné 
+        "exercise_name" nom d'un exercice existant dans la base de donné 
     ]

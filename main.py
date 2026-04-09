@@ -9,6 +9,7 @@ from handlers.csvHandler import convertCsvToPanda
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session
 from config import ERROR_ID, LOG_ID, TMP_PATH, TO_IMPORT_ID, Base
+from handlers.excelHandler import convertExcelToPanda
 from utils import driveHelper
 from utils.fileManager import GetFileType, WriteLog
 from handlers.dbHandler import sendToTable
@@ -51,8 +52,10 @@ def Main() :
 
         data : pandas.DataFrame = None
         match GetFileType(local_path):
-            case "csv" | "xlsx":
+            case "csv":
                 data = convertCsvToPanda(local_path, file, service)
+            case "xlsx":
+                data = convertExcelToPanda(local_path, file, service)
             case "json":
                 data = convertJsonToPanda(local_path, file, service)
             case _:

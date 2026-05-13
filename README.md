@@ -1,5 +1,7 @@
 # 🧠 HealthAiCoach ETL – Déploiement et Configuration
 
+takes CSV, JSON and xlsx file and send them to a DataBase
+
 Cette version du pipeline ETL permet l’import et le traitement automatisé des données de santé, avec intégration Google Drive pour la récupération automatique des fichiers.
 
 ---
